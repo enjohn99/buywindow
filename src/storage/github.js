@@ -1,4 +1,4 @@
-import { listingPath, observationPath, productPath, reviewPath } from "./paths.js";
+import { discoveryPath, listingPath, observationPath, productPath, reviewPath } from "./paths.js";
 import { validateCanonicalProduct, validateObservation, validateRetailerListing } from "../domain/validate.js";
 
 export class GitHubCatalogStore {
@@ -76,5 +76,13 @@ export class GitHubCatalogStore {
 
   async queueReview(review) {
     await this.upsertJson(reviewPath(review.reviewId), review, `review: queue ${review.reviewId}`);
+  }
+
+  async saveDiscoverySearch(snapshot) {
+    await this.upsertJson(
+      discoveryPath(snapshot.searchId, snapshot.observedAt),
+      snapshot,
+      `discovery: ${snapshot.query} (${snapshot.resultCount} results)`
+    );
   }
 }
