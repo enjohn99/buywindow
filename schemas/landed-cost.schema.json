@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://buywindow.dev/schemas/landed-cost.schema.json",
+  "title": "BuyWindow Landed Cost",
+  "type": "object",
+  "required": ["status", "listingId", "retailer", "listedPrice", "currency", "fulfillment", "completeness"],
+  "properties": {
+    "status": { "enum": ["complete", "partial", "unavailable"] },
+    "listingId": { "type": "string" },
+    "retailer": { "type": "string" },
+    "listedPrice": { "type": "number", "minimum": 0 },
+    "shippingAmount": { "type": "number", "minimum": 0 },
+    "landedCost": { "type": "number", "minimum": 0 },
+    "currency": { "type": "string" },
+    "fulfillment": { "enum": ["shipping", "pickup", "delivery"] },
+    "destination": { "type": "object" },
+    "tax": {
+      "type": "object",
+      "required": ["status", "provider", "source", "confidence"],
+      "properties": {
+        "status": { "enum": ["observed", "estimated", "unavailable"] },
+        "provider": { "type": "string" },
+        "taxAmount": { "type": "number", "minimum": 0 },
+        "source": { "type": "string" },
+        "confidence": { "type": "string" }
+      }
+    },
+    "completeness": {
+      "type": "object",
+      "required": ["price", "shipping", "tax"],
+      "properties": {
+        "price": { "type": "boolean" },
+        "shipping": { "type": "boolean" },
+        "tax": { "type": "boolean" }
+      }
+    }
+  }
+}
