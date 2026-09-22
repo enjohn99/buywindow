@@ -85,7 +85,7 @@ export function createApiHandler({
         return json(res, 200, {
           status: "ok",
           service: "buywindow",
-          version: "0.5.0",
+          version: "0.6.0",
         });
       }
 
