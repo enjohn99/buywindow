@@ -26,7 +26,7 @@ export async function canonicalizeDiscovery({ snapshot, catalog }) {
           });
         }
       }
-    } else if (classification.classification === "needs_human_review" || classification.classification === "variant") {
+    } else if (["needs_human_review", "variant", "new_product"].includes(classification.classification)) {
       const review = makeReviewRecord(classification, listing);
       await catalog.queueReview(review);
       record.reviewId = review.reviewId;
