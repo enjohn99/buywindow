@@ -108,3 +108,29 @@ docker compose run --rm buywindow src/cli/review.js resolve <review-id> reject
 ```
 
 A resolved review is moved to `reviews/resolved/`. Approved same-product, variant, and new-product decisions update the canonical catalog and add the observed offer to trusted price history when a price is available.
+
+
+## HTTP API
+
+BuyWindow now runs as an HTTP service by default in Docker:
+
+```bash
+docker compose up --build
+```
+
+Health check:
+
+```bash
+curl http://localhost:8080/health
+```
+
+Search:
+
+```bash
+curl -X POST http://localhost:8080/v1/search \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $BUYWINDOW_API_KEY" \
+  -d '{"query":"DEWALT DCD996B","location":"Austin, Texas"}'
+```
+
+See `docs/API.md` and `openapi.yaml` for the API contract.
