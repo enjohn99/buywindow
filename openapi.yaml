@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: BuyWindow API
-  version: 0.5.0
+  version: 0.6.0
   description: API for cross-retailer product discovery, canonical identity, trusted price history, and human review.
 servers:
   - url: http://localhost:8080
@@ -34,6 +34,33 @@ paths:
                   type: string
                 location:
                   type: string
+                destination:
+                  type: object
+                  properties:
+                    line1:
+                      type: string
+                    line2:
+                      type: string
+                    city:
+                      type: string
+                    state:
+                      type: string
+                    postalCode:
+                      type: string
+                    country:
+                      type: string
+                fulfillment:
+                  type: string
+                  enum: [shipping, pickup, delivery]
+                taxCategory:
+                  type: string
+                  default: general_tangible_goods
+                taxCode:
+                  type: string
+                  default: txcd_99999999
+                maxTaxCalculations:
+                  type: integer
+                  minimum: 0
                 gl:
                   type: string
                 hl:
