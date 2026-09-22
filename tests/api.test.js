@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import http from "node:http";
 import { createApiHandler } from "../src/api/server.js";
+import { JurisdictionRulesTaxProvider } from "../src/tax/jurisdiction-rules.js";
 
 async function withServer(handler, fn) {
   const server = http.createServer(handler);
@@ -88,5 +89,53 @@ test("product endpoint returns canonical product", async () => {
     });
     assert.equal(response.status, 200);
     assert.equal((await response.json()).productId, "p1");
+  });
+});
+
+
+test("search calculates zero Oregon general sales tax when destination is Portland", async () => {
+  const deps = dependencies();
+  deps.adapter.search = async (query) => [{
+    listingId: "or-1",
+    retailer: "Demo Store",
+    source: "test",
+    url: "https://example.com/or-1",
+    title: query,
+    identifiers: {},
+    specifications: {},
+    packageContents: [],
+    imageEvidence: [],
+    observedAt: new Date().toISOString(),
+    offer: { price: 100, shippingAmount: 0, currency: "USD" },
+  }];
+
+  const handler = createApiHandler({
+    ...deps,
+    taxProviders: [new JurisdictionRulesTaxProvider()],
+    apiKey: "secret",
+  });
+
+  await withServer(handler, async (base) => {
+    const response = await fetch(`${base}/v1/search`, {
+      method: "POST",
+      headers: {
+        authorization: "Bearer secret",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        query: "demo product",
+        destination: {
+          city: "Portland",
+          state: "OR",
+          postalCode: "97205",
+          country: "US"
+        }
+      }),
+    });
+    assert.equal(response.status, 200);
+    const body = await response.json();
+    assert.equal(body.results[0].cost.tax.taxAmount, 0);
+    assert.equal(body.results[0].cost.landedCost, 100);
+    assert.equal(body.results[0].cost.tax.jurisdiction, "Oregon");
   });
 });
