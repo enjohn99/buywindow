@@ -23,7 +23,14 @@ Authorization: Bearer <key>
 
 {
   "query": "DEWALT DCD996B",
-  "location": "Austin, Texas"
+  "location": "Portland, Oregon",
+  "destination": {
+    "city": "Portland",
+    "state": "OR",
+    "postalCode": "97205",
+    "country": "US"
+  },
+  "fulfillment": "shipping"
 }
 ```
 
@@ -65,3 +72,24 @@ Supported actions:
 - `new_product`
 - `alternative`
 - `reject`
+
+
+## Landed cost and sales tax
+
+When a structured `destination` is supplied, each search result includes a `cost` object. BuyWindow ranks complete results by:
+
+```
+listed price + known shipping + tax = landed cost
+```
+
+Tax provenance is explicit:
+
+1. `retailer-observed` — preferred when the source exposes the actual checkout tax.
+2. `official-jurisdiction-rule` — maintained rules backed by an official tax authority.
+3. `unavailable` — BuyWindow does not guess.
+
+The first maintained jurisdiction rule covers ordinary general tangible goods delivered in Oregon, where the Oregon Department of Revenue states there is no general sales or use/transaction tax. Special categories are not assumed to be zero-tax.
+
+For shipping, `destination` should be the delivery address. For pickup, it should be the pickup/store jurisdiction once that address is known.
+
+If shipping or tax is unknown, `landedCost` is intentionally omitted and the result is marked `partial`. This prevents a cheap-looking incomplete offer from outranking a known out-the-door total.
