@@ -32,3 +32,15 @@ export function discoveryPath(searchId, observedAt) {
 export function reviewPath(reviewId) {
   return `reviews/pending/${slug(reviewId)}.json`;
 }
+
+export function catalogIndexPath() {
+  return "catalog/index.json";
+}
+
+export function canonicalizationReportPath(searchId, canonicalizedAt) {
+  const date = new Date(canonicalizedAt);
+  const year = String(date.getUTCFullYear());
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  return `canonicalization/${year}/${month}/${day}/${slug(searchId)}.json`;
+}
