@@ -134,3 +134,27 @@ curl -X POST http://localhost:8080/v1/search \
 ```
 
 See `docs/API.md` and `openapi.yaml` for the API contract.
+
+
+## Tax-aware landed cost
+
+BuyWindow can compare the cost that matters: the amount to actually acquire the item.
+
+```
+landed cost = listed price + known shipping/freight + tax
+```
+
+Tax is never silently guessed. Retailer-observed checkout tax wins when available; otherwise BuyWindow can use maintained jurisdiction rules or future pluggable tax providers. Oregon general tangible goods are currently supported as an official-rule fallback for the state's lack of a general sales/use transaction tax. Special product categories remain unresolved unless explicit tax evidence is available.
+
+Example request:
+
+```bash
+curl -X POST http://localhost:8080/v1/search \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $BUYWINDOW_API_KEY" \
+  -d '{
+    "query":"DEWALT DCD996B",
+    "destination":{"city":"Portland","state":"OR","postalCode":"97205","country":"US"},
+    "fulfillment":"shipping"
+  }'
+```
