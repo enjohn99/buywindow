@@ -1,4 +1,4 @@
-import { catalogIndexPath, canonicalizationReportPath, discoveryPath, listingPath, observationPath, productPath, reviewPath } from "./paths.js";
+import { catalogIndexPath, canonicalizationReportPath, discoveryPath, listingPath, observationPath, productPath, resolvedReviewPath, reviewPath } from "./paths.js";
 import { validateCanonicalProduct, validateObservation, validateRetailerListing } from "../domain/validate.js";
 
 export class GitHubCatalogStore {
@@ -98,6 +98,35 @@ export class GitHubCatalogStore {
       if (product) products.push(product);
     }
     return products;
+  }
+
+  async getProductById(productId) {
+    const index = await this.readJson(catalogIndexPath());
+    const item = index?.products?.find((entry) => entry.productId === productId);
+    if (!item) return undefined;
+    return this.readJson(item.path);
+  }
+
+  async getReview(reviewId) {
+    return this.readJson(reviewPath(reviewId));
+  }
+
+  async resolveReview(reviewId, resolved) {
+    await this.upsertJson(resolvedReviewPath(reviewId), resolved, `review: resolve ${reviewId}`);
+    const pending = await this.readText(reviewPath(reviewId));
+    if (pending) {
+      const url = this.endpoint(reviewPath(reviewId));
+      const response = await fetch(url, {
+        method: "DELETE",
+        headers: this.headers(),
+        body: JSON.stringify({
+          message: `review: archive ${reviewId}`,
+          sha: pending.sha,
+          branch: this.branch,
+        }),
+      });
+      if (!response.ok) throw new Error(`GitHub review archive failed (${response.status}): ${await response.text()}`);
+    }
   }
 
   async saveListing(product, listing) {

@@ -44,3 +44,7 @@ export function canonicalizationReportPath(searchId, canonicalizedAt) {
   const day = String(date.getUTCDate()).padStart(2, "0");
   return `canonicalization/${year}/${month}/${day}/${slug(searchId)}.json`;
 }
+
+export function resolvedReviewPath(reviewId) {
+  return `reviews/resolved/${slug(reviewId)}.json`;
+}

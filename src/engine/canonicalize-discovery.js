@@ -1,6 +1,6 @@
 import { classifyAgainstCatalog, makeReviewRecord } from "../identity/canonicalize.js";
 
-export async function canonicalizeDiscovery({ snapshot, catalog }) {
+export async function canonicalizeDiscovery({ snapshot, catalog, reviewQueue }) {
   const products = await catalog.listCanonicalProducts();
   const results = [];
 
@@ -28,8 +28,16 @@ export async function canonicalizeDiscovery({ snapshot, catalog }) {
       }
     } else if (["needs_human_review", "variant", "new_product"].includes(classification.classification)) {
       const review = makeReviewRecord(classification, listing);
+      if (reviewQueue) {
+        try {
+          review.issueNumber = await reviewQueue.create(review);
+        } catch (error) {
+          review.issueError = String(error);
+        }
+      }
       await catalog.queueReview(review);
       record.reviewId = review.reviewId;
+      record.issueNumber = review.issueNumber;
     }
 
     results.push(record);

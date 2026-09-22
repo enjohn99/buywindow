@@ -85,3 +85,26 @@ docker compose run --rm buywindow src/cli/search.js "DEWALT DCD996B"
 ```
 
 The container image is intentionally stateless. Canonical product data, discovery snapshots, review records, and observations are persisted to the configured GitHub repository.
+
+
+## Human review
+
+Ambiguous matches, variants, and unresolved new products are stored under `reviews/pending/`. When `BUYWINDOW_REVIEW_ISSUES=true`, BuyWindow also creates a GitHub issue with the evidence for a human decision.
+
+Inspect a review:
+
+```bash
+docker compose run --rm buywindow src/cli/review.js show <review-id>
+```
+
+Resolve it:
+
+```bash
+docker compose run --rm buywindow src/cli/review.js resolve <review-id> same_product <product-id>
+docker compose run --rm buywindow src/cli/review.js resolve <review-id> variant
+docker compose run --rm buywindow src/cli/review.js resolve <review-id> new_product
+docker compose run --rm buywindow src/cli/review.js resolve <review-id> alternative <related-product-id>
+docker compose run --rm buywindow src/cli/review.js resolve <review-id> reject
+```
+
+A resolved review is moved to `reviews/resolved/`. Approved same-product, variant, and new-product decisions update the canonical catalog and add the observed offer to trusted price history when a price is available.

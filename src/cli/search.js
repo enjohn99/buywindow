@@ -2,6 +2,7 @@ import { SerpApiGoogleShoppingAdapter } from "../adapters/serpapi-google-shoppin
 import { runDiscovery } from "../engine/discovery.js";
 import { canonicalizeDiscovery } from "../engine/canonicalize-discovery.js";
 import { GitHubCatalogStore } from "../storage/github.js";
+import { GitHubIssueReviewQueue } from "../review/github-issues.js";
 
 const query = process.argv.slice(2).join(" ").trim();
 if (!query) {
@@ -28,6 +29,14 @@ const catalog = new GitHubCatalogStore({
   branch: process.env.GITHUB_BRANCH ?? "main",
 });
 
+const reviewQueue = process.env.BUYWINDOW_REVIEW_ISSUES === "true"
+  ? new GitHubIssueReviewQueue({
+      token: process.env.GITHUB_TOKEN,
+      owner: process.env.GITHUB_OWNER,
+      repo: process.env.GITHUB_REPO,
+    })
+  : undefined;
+
 const snapshot = await runDiscovery({
   adapter,
   query,
@@ -39,7 +48,7 @@ const snapshot = await runDiscovery({
   catalog,
 });
 
-const canonicalization = await canonicalizeDiscovery({ snapshot, catalog });
+const canonicalization = await canonicalizeDiscovery({ snapshot, catalog, reviewQueue });
 
 console.log(JSON.stringify({
   search: {
