@@ -43,7 +43,6 @@ export class GitHubIssueReviewQueue {
       body: JSON.stringify({
         title: `[human-review] ${review.candidateListing.title}`,
         body,
-        labels: ["human-review"],
       }),
     });
     if (!response.ok) throw new Error(`GitHub issue creation failed (${response.status}): ${await response.text()}`);
