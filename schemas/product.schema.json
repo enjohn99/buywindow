@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://buywindow.dev/schemas/product.schema.json",
+  "title": "BuyWindow Canonical Product",
+  "type": "object",
+  "required": ["productId", "brand", "name", "identifiers", "createdAt", "updatedAt", "schemaVersion"],
+  "properties": {
+    "productId": { "type": "string", "minLength": 1 },
+    "brand": { "type": "string", "minLength": 1 },
+    "name": { "type": "string", "minLength": 1 },
+    "categoryPath": { "type": "array", "items": { "type": "string" } },
+    "identifiers": {
+      "type": "object",
+      "properties": {
+        "upc": { "type": "string" },
+        "gtin": { "type": "string" },
+        "mpn": { "type": "string" },
+        "manufacturerModel": { "type": "string" }
+      }
+    },
+    "specifications": { "type": "object", "additionalProperties": { "type": ["string", "number", "boolean"] } },
+    "packageContents": { "type": "array", "items": { "type": "string" } },
+    "imageEvidence": { "type": "array" },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "updatedAt": { "type": "string", "format": "date-time" },
+    "schemaVersion": { "const": 1 }
+  }
+}
