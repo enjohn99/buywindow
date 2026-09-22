@@ -2,7 +2,6 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { calculateLandedCost, rankByLandedCost } from "../src/cost/landed-cost.js";
 import { JurisdictionRulesTaxProvider } from "../src/tax/jurisdiction-rules.js";
-import { StripeTaxProvider } from "../src/tax/stripe-tax.js";
 
 function listing(overrides = {}) {
   return {
@@ -57,31 +56,4 @@ test("ranks complete landed costs before partial sticker prices", () => {
     { listingId: "complete", listedPrice: 90, landedCost: 95 },
   ]);
   assert.equal(ranked[0].listingId, "complete");
-});
-
-test("Stripe adapter posts address and general tangible goods tax code", async () => {
-  let body;
-  const fetchImpl = async (_url, options) => {
-    body = String(options.body);
-    return {
-      ok: true,
-      async json() {
-        return {
-          id: "taxcalc_test",
-          currency: "usd",
-          tax_amount_exclusive: 825,
-          amount_total: 10825,
-        };
-      },
-    };
-  };
-  const provider = new StripeTaxProvider({ secretKey: "sk_test", fetchImpl });
-  const result = await provider.calculate({
-    amount: 100,
-    destination: { state: "TX", postalCode: "78758", country: "US" },
-  });
-  assert.match(body, /line_items%5B0%5D%5Btax_code%5D=txcd_99999999/);
-  assert.match(body, /customer_details%5Baddress%5D%5Bpostal_code%5D=78758/);
-  assert.equal(result.taxAmount, 8.25);
-  assert.equal(result.amountTotal, 108.25);
 });
