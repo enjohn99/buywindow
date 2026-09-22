@@ -1,4 +1,4 @@
-import { discoveryPath, listingPath, observationPath, productPath, reviewPath } from "./paths.js";
+import { catalogIndexPath, canonicalizationReportPath, discoveryPath, listingPath, observationPath, productPath, reviewPath } from "./paths.js";
 import { validateCanonicalProduct, validateObservation, validateRetailerListing } from "../domain/validate.js";
 
 export class GitHubCatalogStore {
@@ -59,7 +59,45 @@ export class GitHubCatalogStore {
 
   async saveProduct(product) {
     validateCanonicalProduct(product);
-    await this.upsertJson(productPath(product.brand, product.productId), product, `catalog: upsert ${product.productId}`);
+    const path = productPath(product.brand, product.productId);
+    await this.upsertJson(path, product, `catalog: upsert ${product.productId}`);
+    await this.upsertCatalogIndex({
+      productId: product.productId,
+      brand: product.brand,
+      name: product.name,
+      identifiers: product.identifiers ?? {},
+      categoryPath: product.categoryPath ?? [],
+      path,
+      updatedAt: product.updatedAt,
+    });
+  }
+
+  async upsertCatalogIndex(entry) {
+    const path = catalogIndexPath();
+    const current = await this.readText(path);
+    const index = current?.text ? JSON.parse(current.text) : { schemaVersion: 1, products: [] };
+    const next = index.products.filter((item) => item.productId !== entry.productId);
+    next.push(entry);
+    next.sort((a, b) => a.productId.localeCompare(b.productId));
+    index.products = next;
+    index.updatedAt = new Date().toISOString();
+    await this.writeText(path, `${JSON.stringify(index, null, 2)}\n`, `catalog-index: upsert ${entry.productId}`, current?.sha);
+  }
+
+  async readJson(path) {
+    const current = await this.readText(path);
+    return current?.text ? JSON.parse(current.text) : undefined;
+  }
+
+  async listCanonicalProducts() {
+    const index = await this.readJson(catalogIndexPath());
+    if (!index?.products?.length) return [];
+    const products = [];
+    for (const item of index.products) {
+      const product = await this.readJson(item.path);
+      if (product) products.push(product);
+    }
+    return products;
   }
 
   async saveListing(product, listing) {
@@ -83,6 +121,14 @@ export class GitHubCatalogStore {
       discoveryPath(snapshot.searchId, snapshot.observedAt),
       snapshot,
       `discovery: ${snapshot.query} (${snapshot.resultCount} results)`
+    );
+  }
+
+  async saveCanonicalizationReport(report) {
+    await this.upsertJson(
+      canonicalizationReportPath(report.searchId, report.canonicalizedAt),
+      report,
+      `canonicalization: ${report.query}`
     );
   }
 }

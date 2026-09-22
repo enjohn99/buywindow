@@ -56,3 +56,32 @@ npm run demo
 ## Licensing
 
 The licensing strategy is intentionally not finalized in v0.1. The planned model is a community edition plus a hosted commercial service; see `docs/LICENSING.md` before public distribution.
+
+
+## Docker
+
+Build the local image:
+
+```bash
+docker compose build
+```
+
+Create your environment file:
+
+```bash
+cp .env.example .env
+```
+
+Fill in the required values in `.env`, then verify readiness:
+
+```bash
+docker compose run --rm buywindow src/cli/health.js
+```
+
+Run a live product search:
+
+```bash
+docker compose run --rm buywindow src/cli/search.js "DEWALT DCD996B"
+```
+
+The container image is intentionally stateless. Canonical product data, discovery snapshots, review records, and observations are persisted to the configured GitHub repository.
