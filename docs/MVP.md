@@ -11,16 +11,25 @@
 - GitHub Issue escalation
 - retailer adapter contract
 
-## v0.2 — first live sources
+## v0.2 — live cross-retailer discovery
 
-Target tools, outdoor, seasonal, and home-improvement categories first. Add authorized/supported integrations for a small number of retailers and local suppliers. Normalize retailer product pages into the common listing schema.
+- Google Shopping discovery provider via SerpApi
+- location-aware search context
+- normalized retailer/source, price, product ID, image, delivery, and promotion fields
+- raw discovery snapshots committed into GitHub before canonicalization
+- adapter unit tests
+- explicit provider boundary so retailer-specific APIs can be added only when their terms permit BuyWindow's comparison use case
 
-## v0.3 — search experience
+Discovery snapshots are deliberately separate from trusted canonical history. A search result is evidence, not automatically a canonical product match.
 
-- consumer search
-- location-aware offers
-- exact-match vs alternative labeling
-- true/landed cost
+## v0.3 — canonicalization + search experience
+
+- infer brand/model/UPC/GTIN where available
+- image hashing and multimodal evidence
+- candidate generation against the existing catalog
+- consumer search UI/API
+- exact-match vs variant vs alternative labeling
+- location-aware landed cost
 - product history visualization
 
 ## v0.4 — decision intelligence
