@@ -57,3 +57,15 @@ test("ranks complete landed costs before partial sticker prices", () => {
   ]);
   assert.equal(ranked[0].listingId, "complete");
 });
+
+
+test("Oregon fallback does not claim zero tax for special categories", async () => {
+  const result = await calculateLandedCost({
+    listing: listing(),
+    destination: { city: "Portland", state: "OR", postalCode: "97205", country: "US" },
+    taxCategory: "vehicle",
+    taxProviders: [new JurisdictionRulesTaxProvider()],
+  });
+  assert.equal(result.tax.status, "unavailable");
+  assert.equal(result.landedCost, undefined);
+});
