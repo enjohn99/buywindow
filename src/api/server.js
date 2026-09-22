@@ -5,6 +5,8 @@ import { canonicalizeDiscovery } from "../engine/canonicalize-discovery.js";
 import { resolveReview } from "../engine/review-resolver.js";
 import { GitHubIssueReviewQueue } from "../review/github-issues.js";
 import { GitHubCatalogStore } from "../storage/github.js";
+import { calculateLandedCost } from "../cost/landed-cost.js";
+import { createTaxProviders } from "../tax/provider-chain.js";
 
 function json(res, status, body) {
   const payload = JSON.stringify(body);
@@ -60,13 +62,16 @@ export function createDependencies(env = process.env) {
       })
     : undefined;
 
-  return { catalog, adapter, reviewQueue };
+  const taxProviders = createTaxProviders(env);
+
+  return { catalog, adapter, reviewQueue, taxProviders };
 }
 
 export function createApiHandler({
   catalog,
   adapter,
   reviewQueue,
+  taxProviders = [],
   apiKey,
   defaultLocation,
   gl = "us",
@@ -110,12 +115,76 @@ export function createApiHandler({
           reviewQueue,
         });
 
+        const destination = body.destination;
+        const fulfillment = body.fulfillment || "shipping";
+        const maxTaxCalculations = Math.max(
+          0,
+          Number(body.maxTaxCalculations ?? process.env.BUYWINDOW_TAX_MAX_RESULTS ?? 10)
+        );
+
+        const indexed = canonicalization.results.map((result, index) => ({ result, index }));
+        const priced = indexed
+          .filter(({ result }) => Number.isFinite(Number(result.listing?.offer?.price)))
+          .sort((a, b) => Number(a.result.listing.offer.price) - Number(b.result.listing.offer.price));
+
+        const eligibleIndexes = new Set(
+          priced.slice(0, maxTaxCalculations).map(({ index }) => index)
+        );
+
+        const enriched = await Promise.all(
+          canonicalization.results.map(async (result, index) => {
+            const shouldCalculate = destination && eligibleIndexes.has(index);
+            if (!shouldCalculate) {
+              return {
+                ...result,
+                cost: {
+                  status: "partial",
+                  listedPrice: result.listing?.offer?.price,
+                  currency: result.listing?.offer?.currency ?? "USD",
+                  reason: destination
+                    ? "tax calculation limit reached"
+                    : "destination required for landed-cost tax calculation",
+                },
+              };
+            }
+
+            const cost = await calculateLandedCost({
+              listing: result.listing,
+              destination,
+              fulfillment,
+              taxProviders,
+              taxCode: body.taxCode || "txcd_99999999",
+              taxCategory: body.taxCategory || "general_tangible_goods",
+            });
+
+            return { ...result, cost };
+          })
+        );
+
+        enriched.sort((a, b) => {
+          const aCost = a.cost?.landedCost;
+          const bCost = b.cost?.landedCost;
+          if (aCost != null && bCost != null) return aCost - bCost;
+          if (aCost != null) return -1;
+          if (bCost != null) return 1;
+          return Number(a.listing?.offer?.price ?? Infinity) - Number(b.listing?.offer?.price ?? Infinity);
+        });
+
         return json(res, 200, {
           searchId: snapshot.searchId,
           query,
           resultCount: snapshot.resultCount,
           summary: canonicalization.summary,
-          results: canonicalization.results,
+          costBasis: destination
+            ? {
+                destination,
+                fulfillment,
+                taxCode: body.taxCode || "txcd_99999999",
+                taxCategory: body.taxCategory || "general_tangible_goods",
+                maxTaxCalculations,
+              }
+            : undefined,
+          results: enriched,
         });
       }
 
