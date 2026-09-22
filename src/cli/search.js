@@ -1,5 +1,6 @@
 import { SerpApiGoogleShoppingAdapter } from "../adapters/serpapi-google-shopping.js";
 import { runDiscovery } from "../engine/discovery.js";
+import { canonicalizeDiscovery } from "../engine/canonicalize-discovery.js";
 import { GitHubCatalogStore } from "../storage/github.js";
 
 const query = process.argv.slice(2).join(" ").trim();
@@ -38,4 +39,16 @@ const snapshot = await runDiscovery({
   catalog,
 });
 
-console.log(JSON.stringify(snapshot, null, 2));
+const canonicalization = await canonicalizeDiscovery({ snapshot, catalog });
+
+console.log(JSON.stringify({
+  search: {
+    searchId: snapshot.searchId,
+    query: snapshot.query,
+    resultCount: snapshot.resultCount,
+  },
+  canonicalization: {
+    summary: canonicalization.summary,
+    canonicalizedAt: canonicalization.canonicalizedAt,
+  },
+}, null, 2));
