@@ -1,0 +1,80 @@
+import { listingPath, observationPath, productPath, reviewPath } from "./paths.js";
+import { validateCanonicalProduct, validateObservation, validateRetailerListing } from "../domain/validate.js";
+
+export class GitHubCatalogStore {
+  constructor(options) {
+    this.options = options;
+    this.branch = options.branch ?? "main";
+    this.apiBase = options.apiBase ?? "https://api.github.com";
+  }
+
+  headers() {
+    return {
+      Accept: "application/vnd.github+json",
+      Authorization: `Bearer ${this.options.token}`,
+      "X-GitHub-Api-Version": "2022-11-28",
+      "Content-Type": "application/json",
+      "User-Agent": "buywindow/0.1",
+    };
+  }
+
+  endpoint(path) {
+    const encoded = path.split("/").map(encodeURIComponent).join("/");
+    return `${this.apiBase}/repos/${this.options.owner}/${this.options.repo}/contents/${encoded}`;
+  }
+
+  async readText(path) {
+    const response = await fetch(`${this.endpoint(path)}?ref=${encodeURIComponent(this.branch)}`, { headers: this.headers() });
+    if (response.status === 404) return undefined;
+    if (!response.ok) throw new Error(`GitHub read failed (${response.status}): ${await response.text()}`);
+    const body = await response.json();
+    const text = body.content ? Buffer.from(body.content.replace(/\n/g, ""), "base64").toString("utf8") : "";
+    return { text, sha: body.sha };
+  }
+
+  async writeText(path, text, message, expectedSha) {
+    const body = { message, content: Buffer.from(text, "utf8").toString("base64"), branch: this.branch };
+    if (expectedSha) body.sha = expectedSha;
+    const response = await fetch(this.endpoint(path), { method: "PUT", headers: this.headers(), body: JSON.stringify(body) });
+    if (!response.ok) throw new Error(`GitHub write failed (${response.status}): ${await response.text()}`);
+  }
+
+  async upsertJson(path, value, message) {
+    const current = await this.readText(path);
+    await this.writeText(path, `${JSON.stringify(value, null, 2)}\n`, message, current?.sha);
+  }
+
+  async appendJsonLine(path, value, message, retries = 3) {
+    for (let attempt = 0; attempt < retries; attempt++) {
+      const current = await this.readText(path);
+      const next = `${current?.text ?? ""}${JSON.stringify(value)}\n`;
+      try {
+        await this.writeText(path, next, message, current?.sha);
+        return;
+      } catch (error) {
+        if (attempt === retries - 1 || !String(error).includes("409")) throw error;
+      }
+    }
+  }
+
+  async saveProduct(product) {
+    validateCanonicalProduct(product);
+    await this.upsertJson(productPath(product.brand, product.productId), product, `catalog: upsert ${product.productId}`);
+  }
+
+  async saveListing(product, listing) {
+    validateCanonicalProduct(product);
+    validateRetailerListing(listing);
+    await this.upsertJson(listingPath(product.brand, product.productId, listing.retailer, listing.listingId), listing, `listing: ${listing.retailer}/${listing.listingId} -> ${product.productId}`);
+  }
+
+  async appendObservation(product, observation) {
+    validateCanonicalProduct(product);
+    validateObservation(observation);
+    await this.appendJsonLine(observationPath(product.brand, product.productId, observation.observedAt), observation, `observation: ${observation.retailer} ${observation.productId}`);
+  }
+
+  async queueReview(review) {
+    await this.upsertJson(reviewPath(review.reviewId), review, `review: queue ${review.reviewId}`);
+  }
+}

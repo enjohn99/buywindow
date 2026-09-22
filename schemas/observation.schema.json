@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://buywindow.dev/schemas/observation.schema.json",
+  "title": "BuyWindow Offer Observation",
+  "type": "object",
+  "required": ["observationId", "productId", "listingId", "retailer", "observedAt", "currency", "sourceUrl"],
+  "properties": {
+    "observationId": { "type": "string" },
+    "productId": { "type": "string" },
+    "listingId": { "type": "string" },
+    "retailer": { "type": "string" },
+    "observedAt": { "type": "string", "format": "date-time" },
+    "price": { "type": "number", "minimum": 0 },
+    "currency": { "type": "string" },
+    "inventory": { "type": "integer", "minimum": 0 },
+    "inventoryStatus": { "enum": ["in_stock", "low_stock", "out_of_stock", "unknown"] },
+    "promotion": { "type": "string" },
+    "sourceUrl": { "type": "string", "format": "uri" }
+  }
+}
