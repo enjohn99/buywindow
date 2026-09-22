@@ -1,6 +1,6 @@
 {
   "name": "buywindow",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Git-backed product intelligence engine for canonical product identity, price observations, and human-reviewed matching.",
   "type": "module",
@@ -8,6 +8,7 @@
   "scripts": {
     "test": "node --test",
     "demo": "node src/cli/demo.js",
-    "check": "node --check src/identity/matcher.js && node --check src/storage/github.js && node --check src/engine/ingest.js"
+    "search": "node src/cli/search.js",
+    "check": "node --check src/identity/matcher.js && node --check src/storage/github.js && node --check src/engine/ingest.js && node --check src/engine/discovery.js && node --check src/adapters/serpapi-google-shopping.js"
   }
 }
