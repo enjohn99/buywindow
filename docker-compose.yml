@@ -1,0 +1,11 @@
+services:
+  buywindow:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: buywindow:local
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+    command: ["src/cli/health.js"]
