@@ -139,3 +139,18 @@ test("search calculates zero Oregon general sales tax when destination is Portla
     assert.equal(body.results[0].cost.tax.jurisdiction, "Oregon");
   });
 });
+
+
+test("serves the BuyWindow web app", async () => {
+  const handler = createApiHandler({ ...dependencies(), apiKey: "secret" });
+  await withServer(handler, async (base) => {
+    const root = await fetch(`${base}/`, { redirect: "manual" });
+    assert.equal(root.status, 302);
+    assert.equal(root.headers.get("location"), "/app/");
+
+    const app = await fetch(`${base}/app/`);
+    assert.equal(app.status, 200);
+    assert.match(app.headers.get("content-type"), /text\/html/);
+    assert.match(await app.text(), /Know when, where/);
+  });
+});
