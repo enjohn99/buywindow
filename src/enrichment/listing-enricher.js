@@ -87,9 +87,9 @@ export async function enrichListing(listing, options = {}) {
 
   Object.assign(identifiers, detectBarcode(listing.title));
 
-  const imageEvidence = options.hashImages === false
-    ? (listing.imageEvidence ?? [])
-    : await hashImageEvidence(listing.imageEvidence ?? [], options.fetchImpl);
+  const imageEvidence = options.hashImages === true
+    ? await hashImageEvidence(listing.imageEvidence ?? [], options.fetchImpl)
+    : (listing.imageEvidence ?? []);
 
   return {
     ...listing,
@@ -102,7 +102,7 @@ export async function enrichListing(listing, options = {}) {
       modelInferred: !listing.identifiers?.manufacturerModel && Boolean(identifiers.manufacturerModel),
       barcodeInferred: Boolean(identifiers.upc || identifiers.gtin) &&
         !(listing.identifiers?.upc || listing.identifiers?.gtin),
-      imageHashAttempted: options.hashImages !== false && Boolean(listing.imageEvidence?.length),
+      imageHashAttempted: options.hashImages === true && Boolean(listing.imageEvidence?.length),
     },
   };
 }
