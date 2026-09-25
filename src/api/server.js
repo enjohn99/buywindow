@@ -167,6 +167,9 @@ export function createApiHandler({
           snapshot,
           catalog,
           reviewQueue,
+          enrichment: {
+            hashImages: process.env.BUYWINDOW_IMAGE_HASHING === "true",
+          },
         });
 
         const destination = body.destination;
