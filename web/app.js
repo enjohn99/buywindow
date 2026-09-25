@@ -105,6 +105,13 @@ function renderResults(data) {
     if (listing.url) link.href = listing.url;
     else link.classList.add("hidden");
 
+    const history = card.querySelector(".history-button");
+    const canonicalProductId = item.productId || item.proposedProductId || item.relatedProductId;
+    if (canonicalProductId && item.classification === "same_product") {
+      history.classList.remove("hidden");
+      history.addEventListener("click", () => openHistory(canonicalProductId));
+    }
+
     const review = card.querySelector(".review-button");
     if (item.reviewId) {
       review.classList.remove("hidden");
@@ -256,3 +263,101 @@ document.querySelectorAll("[data-review-action]").forEach((button) => {
   button.addEventListener("click", () => resolveActiveReview(button.dataset.reviewAction));
 });
 $("#closeReview").addEventListener("click", () => $("#reviewDialog").close());
+
+
+async function loadCatalog() {
+  $("#catalogList").innerHTML = '<p class="muted">Loading catalog…</p>';
+  $("#catalogDialog").showModal();
+
+  try {
+    const response = await fetch("/v1/products", { headers: headers() });
+    const body = await response.json();
+    if (!response.ok) throw new Error(body.error || "Unable to load catalog");
+
+    const products = body.products ?? [];
+    if (!products.length) {
+      $("#catalogList").innerHTML = '<p class="muted">No canonical products yet. Search and resolve new products to build the catalog.</p>';
+      return;
+    }
+
+    $("#catalogList").innerHTML = "";
+    for (const product of products) {
+      const item = document.createElement("div");
+      item.className = "catalog-item";
+      const model = product.identifiers?.manufacturerModel || product.identifiers?.upc || product.productId;
+      item.innerHTML = `
+        <div>
+          <strong>${product.brand || "Unknown brand"} · ${product.name || product.productId}</strong>
+          <small>${model || ""}</small>
+        </div>
+        <button class="ghost small" type="button">View history</button>
+      `;
+      item.querySelector("button").addEventListener("click", () => openHistory(product.productId));
+      $("#catalogList").append(item);
+    }
+  } catch (error) {
+    $("#catalogList").innerHTML = `<p class="muted">${error.message || String(error)}</p>`;
+  }
+}
+
+async function openHistory(productId) {
+  $("#historyTitle").textContent = "Product history";
+  $("#historyStats").innerHTML = "";
+  $("#historyNotice").textContent = "Loading observed prices…";
+  $("#historyList").innerHTML = "";
+  $("#historyDialog").showModal();
+
+  try {
+    const response = await fetch(`/v1/products/${encodeURIComponent(productId)}/history`, {
+      headers: headers(),
+    });
+    const body = await response.json();
+    if (!response.ok) throw new Error(body.error || "Unable to load product history");
+
+    const product = body.product ?? {};
+    const summary = body.summary ?? {};
+    $("#historyTitle").textContent = `${product.brand || ""} ${product.name || product.productId}`.trim();
+
+    const stats = [
+      ["Latest", summary.latestPrice != null ? money(summary.latestPrice, summary.latestCurrency || "USD") : "—"],
+      ["Median", summary.medianPrice != null ? money(summary.medianPrice, summary.latestCurrency || "USD") : "—"],
+      ["Lowest", summary.minPrice != null ? money(summary.minPrice, summary.latestCurrency || "USD") : "—"],
+      ["Observations", summary.pricedObservationCount ?? 0],
+    ];
+
+    $("#historyStats").innerHTML = stats
+      .map(([label, value]) => `<div class="stat"><span>${label}</span><strong>${value}</strong></div>`)
+      .join("");
+
+    $("#historyNotice").textContent = summary.sufficientForTrend
+      ? "Enough observations exist to begin trend analysis, but BuyWindow is not issuing a Buy/Wait forecast yet."
+      : "Not enough trusted history yet for a reliable Buy/Wait trend. BuyWindow is showing observed prices only.";
+
+    const observations = body.observations ?? [];
+    if (!observations.length) {
+      $("#historyList").innerHTML = '<p class="muted">No trusted price observations yet.</p>';
+      return;
+    }
+
+    $("#historyList").innerHTML = "";
+    [...observations].reverse().forEach((observation) => {
+      const row = document.createElement("div");
+      row.className = "history-row";
+      const when = observation.observedAt ? new Date(observation.observedAt).toLocaleString() : "Unknown time";
+      row.innerHTML = `
+        <div>
+          <strong>${observation.retailer || "Retailer"}</strong>
+          <small>${when}</small>
+        </div>
+        <strong>${money(observation.price, observation.currency || "USD")}</strong>
+      `;
+      $("#historyList").append(row);
+    });
+  } catch (error) {
+    $("#historyNotice").textContent = error.message || String(error);
+  }
+}
+
+$("#catalogButton").addEventListener("click", loadCatalog);
+$("#closeCatalog").addEventListener("click", () => $("#catalogDialog").close());
+$("#closeHistory").addEventListener("click", () => $("#historyDialog").close());
