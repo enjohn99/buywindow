@@ -217,3 +217,20 @@ Possible decisions:
 The initial model requires at least 12 trusted priced observations, at least 45 days of history, and a reasonably fresh latest observation. These defaults are intentionally conservative and are returned with the decision metadata.
 
 Important: v0.9 does **not** predict a future price. A `WAIT` result means the current price looks expensive relative to BuyWindow's trusted history; it does not guarantee the price will fall. Future versions can add seasonality and category priors as separate, auditable signals once enough data exists.
+
+
+## Seasonality priors
+
+When product-specific price history is insufficient, BuyWindow can now surface a **low-confidence category advisory** from explicit seed priors.
+
+Current seed categories include above-ground pools, patio furniture, portable/window air conditioners, space heaters, lawn mowers, and a deliberately neutral generator prior.
+
+These signals are kept separate from learned product history:
+
+- they are labeled `sourceType: seed`
+- they expose `learnedFromBuyWindowData: false`
+- confidence is capped at 45%
+- they use softer decisions: `consider_buying` / `consider_waiting`
+- once trusted product history is sufficient, product-specific history remains authoritative
+
+These priors are bootstrap knowledge, not a substitute for BuyWindow's future empirical seasonal models.
