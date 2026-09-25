@@ -14,6 +14,7 @@ import { summarizeHistory } from "../history/summarize.js";
 import { composePurchaseDecision } from "../intelligence/decision-composer.js";
 import { scanArbitrageOpportunities } from "../arbitrage/evaluate.js";
 import { EbayBrowseMarketProvider } from "../resale/ebay-browse.js";
+import { getReadiness } from "../config/readiness.js";
 
 const WEB_ROOT = fileURLToPath(new URL("../../web/", import.meta.url));
 
@@ -138,11 +139,7 @@ export function createApiHandler({
       }
 
       if (req.method === "GET" && url.pathname === "/health") {
-        return json(res, 200, {
-          status: "ok",
-          service: "buywindow",
-          version: "0.12.0",
-        });
+        return json(res, 200, getReadiness(process.env));
       }
 
       if (!bearerAuthorized(req, apiKey)) {
