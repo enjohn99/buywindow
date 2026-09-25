@@ -15,6 +15,7 @@
         <span>BuyWindow</span>
       </a>
       <div class="top-actions">
+        <button id="watchlistButton" class="ghost small" type="button">Watchlist</button>
         <button id="arbitrageButton" class="ghost small" type="button">Arbitrage</button>
         <button id="catalogButton" class="ghost small" type="button">Catalog</button>
         <button id="authButton" class="ghost small" type="button">API access</button>
@@ -115,6 +116,25 @@
         <input id="reviewNote" placeholder="Why this decision is correct">
       </label>
       <p id="reviewStatus" class="muted"></p>
+    </div>
+  </dialog>
+
+  <dialog id="watchlistDialog">
+    <div class="dialog-card wide-dialog">
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">WATCHLIST</p>
+          <h2>Scheduled price collection</h2>
+        </div>
+        <button id="closeWatchlist" class="icon-button" aria-label="Close">×</button>
+      </div>
+      <div class="watchlist-add">
+        <input id="watchQuery" placeholder="Product query, model, or exact product">
+        <input id="watchLocation" placeholder="Optional location">
+        <button id="addWatchItem" class="primary" type="button">Add</button>
+      </div>
+      <div id="watchlistStatus" class="history-notice">Tracked products are collected by the scheduled GitHub Action.</div>
+      <div id="watchlistList" class="watchlist-list"></div>
     </div>
   </dialog>
 

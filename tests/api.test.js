@@ -27,6 +27,8 @@ function dependencies() {
       async getProductById(id) { return id === "p1" ? { productId: "p1", brand: "Demo", name: "Product" } : undefined; },
       async listCanonicalProducts() { return [{ productId: "p1", brand: "Demo", name: "Product" }]; },
       async listCatalogIndex() { return [{ productId: "p1", brand: "Demo", name: "Product", identifiers: {} }]; },
+      async getWatchlist() { return { schemaVersion: 1, items: [] }; },
+      async saveWatchlist(watchlist) { return { schemaVersion: 1, updatedAt: new Date().toISOString(), items: watchlist.items ?? [] }; },
       async getProductHistory(id) {
         return id === "p1"
           ? [
@@ -267,5 +269,45 @@ test("arbitrage endpoint returns benchmark candidates without claiming validated
     assert.equal(body.validatedResaleMarket, false);
     assert.equal(body.count, 1);
     assert.equal(body.opportunities[0].benchmark.validatedResaleMarket, false);
+  });
+});
+
+
+test("watchlist API adds, lists, and removes watched queries", async () => {
+  const deps = dependencies();
+  let items = [];
+  deps.catalog.getWatchlist = async () => ({ schemaVersion: 1, items });
+  deps.catalog.saveWatchlist = async (watchlist) => {
+    items = watchlist.items ?? [];
+    return { schemaVersion: 1, items };
+  };
+
+  const handler = createApiHandler({ ...deps, apiKey: "secret" });
+  await withServer(handler, async (base) => {
+    const added = await fetch(`${base}/v1/watchlist`, {
+      method: "POST",
+      headers: {
+        authorization: "Bearer secret",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({ query: "Intex above ground pool", location: "Austin, Texas" }),
+    });
+    assert.equal(added.status, 201);
+    const addedBody = await added.json();
+    assert.equal(addedBody.item.query, "Intex above ground pool");
+    assert.equal(items.length, 1);
+
+    const listed = await fetch(`${base}/v1/watchlist`, {
+      headers: { authorization: "Bearer secret" },
+    });
+    assert.equal(listed.status, 200);
+    assert.equal((await listed.json()).items.length, 1);
+
+    const removed = await fetch(
+      `${base}/v1/watchlist/${encodeURIComponent(addedBody.item.watchId)}`,
+      { method: "DELETE", headers: { authorization: "Bearer secret" } }
+    );
+    assert.equal(removed.status, 200);
+    assert.equal(items.length, 0);
   });
 });

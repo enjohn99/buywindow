@@ -64,3 +64,15 @@ SERPAPI_API_KEY=...
 That is enough for the core search/catalog workflow.
 
 See `.env.example` for every supported variable. Do not commit a real `.env` file or secrets.
+
+
+## GitHub Actions scheduled collector
+
+The daily watchlist workflow uses repository configuration differently from a local `.env`:
+
+- `GITHUB_TOKEN`, `GITHUB_OWNER`, and `GITHUB_REPO` are supplied automatically by GitHub Actions.
+- Add `SERPAPI_API_KEY` as a repository Actions secret.
+- `BUYWINDOW_LOCATION` may optionally be added as a repository Actions variable.
+- eBay credentials are not required for price-history collection.
+
+The workflow writes observations back to `main` using the repository's built-in GitHub token.

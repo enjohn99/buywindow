@@ -222,3 +222,55 @@ paths:
       responses:
         "200":
           description: Ranked benchmark opportunities; historical retail benchmark is not validated resale market value
+
+  /v1/watchlist:
+    get:
+      summary: List watched product queries
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Git-backed watchlist
+    post:
+      summary: Add a watched product query
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [query]
+              properties:
+                query:
+                  type: string
+                productId:
+                  type: string
+                location:
+                  type: string
+                gl:
+                  type: string
+                hl:
+                  type: string
+                enabled:
+                  type: boolean
+      responses:
+        "201":
+          description: Watch item created
+  /v1/watchlist/{watchId}:
+    delete:
+      summary: Remove a watched product query
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: watchId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Watch item removed
+        "404":
+          description: Watch item not found

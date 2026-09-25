@@ -1,4 +1,4 @@
-import { catalogIndexPath, canonicalizationReportPath, discoveryPath, listingPath, observationPath, productPath, resolvedReviewPath, reviewPath } from "./paths.js";
+import { catalogIndexPath, canonicalizationReportPath, discoveryPath, listingPath, observationPath, productPath, resolvedReviewPath, reviewPath, watchlistPath } from "./paths.js";
 import { validateCanonicalProduct, validateObservation, validateRetailerListing } from "../domain/validate.js";
 
 export class GitHubCatalogStore {
@@ -100,6 +100,24 @@ export class GitHubCatalogStore {
     }
     const body = await response.json();
     return Array.isArray(body) ? body : [];
+  }
+
+  async getWatchlist() {
+    return (await this.readJson(watchlistPath())) ?? {
+      schemaVersion: 1,
+      updatedAt: undefined,
+      items: [],
+    };
+  }
+
+  async saveWatchlist(watchlist) {
+    const value = {
+      schemaVersion: 1,
+      updatedAt: new Date().toISOString(),
+      items: Array.isArray(watchlist?.items) ? watchlist.items : [],
+    };
+    await this.upsertJson(watchlistPath(), value, "watchlist: update products");
+    return value;
   }
 
   async listCatalogIndex() {

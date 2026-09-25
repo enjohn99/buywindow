@@ -48,3 +48,7 @@ export function canonicalizationReportPath(searchId, canonicalizedAt) {
 export function resolvedReviewPath(reviewId) {
   return `reviews/resolved/${slug(reviewId)}.json`;
 }
+
+export function watchlistPath() {
+  return "watchlists/products.json";
+}

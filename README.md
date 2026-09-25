@@ -316,3 +316,32 @@ BUYWINDOW_IMAGE_HASHING=true
 ```
 
 Image fetch/hash failures are stored as enrichment evidence and never fail the shopping search. SHA-256 supports exact-image matches; perceptual/near-duplicate image matching remains a future enrichment layer.
+
+
+## Watchlist and scheduled collection
+
+BuyWindow v0.14 adds a Git-backed watchlist at:
+
+```
+watchlists/products.json
+```
+
+Watched queries can be managed through the web app or the HTTP API. The collector reuses the normal discovery, enrichment, identity matching, human-review, and observation-writing pipeline so scheduled data is held to the same trust rules as interactive searches.
+
+Run it manually:
+
+```bash
+npm run collect:watchlist
+```
+
+A GitHub Actions workflow at `.github/workflows/collect-watchlist.yml` is scheduled once per day and can also be triggered manually.
+
+For the scheduled workflow, add this repository secret in GitHub:
+
+```
+SERPAPI_API_KEY
+```
+
+The workflow uses GitHub's built-in `github.token` with `contents: write` for canonical catalog writes, so a second GitHub token is not required for the default same-repository setup.
+
+If the SerpApi secret is absent, the scheduled workflow exits successfully with a clear skipped status rather than failing the repository's Actions dashboard.
