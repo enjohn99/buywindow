@@ -1,0 +1,36 @@
+name: Collect watchlist
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 13 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: buywindow-watchlist-collector
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Collect watched products
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_OWNER: ${{ github.repository_owner }}
+          GITHUB_REPO: ${{ github.event.repository.name }}
+          GITHUB_BRANCH: main
+          SERPAPI_API_KEY: ${{ secrets.SERPAPI_API_KEY }}
+          BUYWINDOW_LOCATION: ${{ vars.BUYWINDOW_LOCATION }}
+          BUYWINDOW_GL: us
+          BUYWINDOW_HL: en
+          BUYWINDOW_REVIEW_ISSUES: "false"
+          BUYWINDOW_IMAGE_HASHING: "false"
+          BUYWINDOW_COLLECTOR_ALLOW_SKIP: "true"
+        run: npm run collect:watchlist
