@@ -91,6 +91,31 @@
     </form>
   </dialog>
 
+  <dialog id="reviewDialog">
+    <div class="dialog-card">
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">HUMAN REVIEW</p>
+          <h2>Resolve product identity</h2>
+        </div>
+        <button id="closeReview" class="icon-button" aria-label="Close">×</button>
+      </div>
+      <div id="reviewDetails" class="review-details"></div>
+      <div class="review-actions">
+        <button data-review-action="same_product" class="primary">Same product</button>
+        <button data-review-action="variant" class="ghost">Variant</button>
+        <button data-review-action="new_product" class="ghost">New product</button>
+        <button data-review-action="alternative" class="ghost">Alternative</button>
+        <button data-review-action="reject" class="danger-button">Reject</button>
+      </div>
+      <label class="review-note">
+        <span>Optional note</span>
+        <input id="reviewNote" placeholder="Why this decision is correct">
+      </label>
+      <p id="reviewStatus" class="muted"></p>
+    </div>
+  </dialog>
+
   <template id="resultTemplate">
     <article class="result-card">
       <div class="thumb-wrap"><img class="thumb" alt=""></div>
