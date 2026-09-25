@@ -296,3 +296,23 @@ BuyWindow records:
 This evidence is intentionally labeled `active_asking_market`. It does **not** claim to be sold/completed transaction data, and returns `validatedSoldPrice: false`.
 
 The eBay Browse API can use an application OAuth token for search-only access. BuyWindow mints and caches that short-lived token server-side; credentials are never exposed to the browser.
+
+
+## Product enrichment
+
+Before canonical identity matching, BuyWindow enriches retailer listings with additional identity evidence.
+
+v0.13 adds:
+
+- known-brand inference from listing titles
+- manufacturer-model inference from model-like title tokens
+- explicitly labeled UPC/GTIN extraction
+- optional SHA-256 hashing of listing images for exact-image evidence
+
+Cheap text/identifier enrichment is always enabled. Image hashing is opt-in because it requires downloading external product images:
+
+```dotenv
+BUYWINDOW_IMAGE_HASHING=true
+```
+
+Image fetch/hash failures are stored as enrichment evidence and never fail the shopping search. SHA-256 supports exact-image matches; perceptual/near-duplicate image matching remains a future enrichment layer.

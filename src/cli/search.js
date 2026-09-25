@@ -48,7 +48,14 @@ const snapshot = await runDiscovery({
   catalog,
 });
 
-const canonicalization = await canonicalizeDiscovery({ snapshot, catalog, reviewQueue });
+const canonicalization = await canonicalizeDiscovery({
+  snapshot,
+  catalog,
+  reviewQueue,
+  enrichment: {
+    hashImages: process.env.BUYWINDOW_IMAGE_HASHING === "true",
+  },
+});
 
 console.log(JSON.stringify({
   search: {

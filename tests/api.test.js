@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import http from "node:http";
 import { createApiHandler } from "../src/api/server.js";
+import { BUYWINDOW_VERSION } from "../src/config/readiness.js";
 import { JurisdictionRulesTaxProvider } from "../src/tax/jurisdiction-rules.js";
 
 async function withServer(handler, fn) {
@@ -73,7 +74,7 @@ test("health is public and reports feature readiness", async () => {
     assert.equal(response.status, 200);
     const body = await response.json();
     assert.equal(body.status, "ok");
-    assert.equal(body.version, "0.12.1");
+    assert.equal(body.version, BUYWINDOW_VERSION);
     assert.equal(body.features.search.ready, true);
     assert.equal(body.features.ebayMarketEvidence.ready, false);
   });

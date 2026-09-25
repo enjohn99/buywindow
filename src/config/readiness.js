@@ -1,4 +1,4 @@
-export const BUYWINDOW_VERSION = "0.12.1";
+export const BUYWINDOW_VERSION = "0.13.0";
 
 export const ENVIRONMENT_VARIABLES = [
   {
@@ -86,6 +86,13 @@ export const ENVIRONMENT_VARIABLES = [
     defaultValue: "10",
   },
   {
+    name: "BUYWINDOW_IMAGE_HASHING",
+    required: false,
+    feature: "Product enrichment",
+    purpose: "When true, download listing images and store SHA-256 evidence for exact visual identity matches.",
+    defaultValue: "false",
+  },
+  {
     name: "EBAY_CLIENT_ID",
     required: false,
     feature: "eBay market evidence",
@@ -150,6 +157,10 @@ export function getReadiness(env = process.env) {
       landedCost: {
         ready: true,
         taxCalculationLimit: Number(env.BUYWINDOW_TAX_MAX_RESULTS ?? 10),
+      },
+      productEnrichment: {
+        ready: true,
+        imageHashingEnabled: env.BUYWINDOW_IMAGE_HASHING === "true",
       },
       ebayMarketEvidence: {
         enabled: ebayCredentials.some(Boolean),
