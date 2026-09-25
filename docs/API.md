@@ -12,7 +12,7 @@ If `BUYWINDOW_API_KEY` is configured, all `/v1/*` routes require:
 Authorization: Bearer <key>
 ```
 
-`GET /health` remains public for container/orchestrator health checks.
+`GET /health` remains public for container/orchestrator health checks and reports per-feature readiness. See `docs/ENVIRONMENT.md` for the environment variable matrix.
 
 ## Search
 
