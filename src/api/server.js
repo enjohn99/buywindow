@@ -11,7 +11,7 @@ import { GitHubCatalogStore } from "../storage/github.js";
 import { calculateLandedCost } from "../cost/landed-cost.js";
 import { createTaxProviders } from "../tax/provider-chain.js";
 import { summarizeHistory } from "../history/summarize.js";
-import { evaluateBuyWait } from "../intelligence/buy-wait.js";
+import { composePurchaseDecision } from "../intelligence/decision-composer.js";
 
 const WEB_ROOT = fileURLToPath(new URL("../../web/", import.meta.url));
 
@@ -133,7 +133,7 @@ export function createApiHandler({
         return json(res, 200, {
           status: "ok",
           service: "buywindow",
-          version: "0.9.0",
+          version: "0.10.0",
         });
       }
 
@@ -277,7 +277,7 @@ export function createApiHandler({
         return json(res, 200, {
           product,
           summary: summarizeHistory(observations ?? []),
-          decision: evaluateBuyWait(observations ?? []),
+          decision: composePurchaseDecision({ product, observations: observations ?? [] }),
           observations: observations ?? [],
         });
       }
@@ -290,7 +290,7 @@ export function createApiHandler({
         const observations = await catalog.getProductHistory(productId, { limit: 2000 });
         return json(res, 200, {
           productId,
-          decision: evaluateBuyWait(observations ?? []),
+          decision: composePurchaseDecision({ product, observations: observations ?? [] }),
         });
       }
 
