@@ -13,6 +13,7 @@ import { createTaxProviders } from "../tax/provider-chain.js";
 import { summarizeHistory } from "../history/summarize.js";
 import { composePurchaseDecision } from "../intelligence/decision-composer.js";
 import { scanArbitrageOpportunities } from "../arbitrage/evaluate.js";
+import { EbayBrowseMarketProvider } from "../resale/ebay-browse.js";
 
 const WEB_ROOT = fileURLToPath(new URL("../../web/", import.meta.url));
 
@@ -102,8 +103,13 @@ export function createDependencies(env = process.env) {
     : undefined;
 
   const taxProviders = createTaxProviders(env);
+  const resaleProvider = new EbayBrowseMarketProvider({
+    clientId: env.EBAY_CLIENT_ID,
+    clientSecret: env.EBAY_CLIENT_SECRET,
+    marketplaceId: env.EBAY_MARKETPLACE_ID ?? "EBAY_US",
+  });
 
-  return { catalog, adapter, reviewQueue, taxProviders };
+  return { catalog, adapter, reviewQueue, taxProviders, resaleProvider };
 }
 
 export function createApiHandler({
@@ -111,6 +117,7 @@ export function createApiHandler({
   adapter,
   reviewQueue,
   taxProviders = [],
+  resaleProvider,
   apiKey,
   defaultLocation,
   gl = "us",
@@ -134,7 +141,7 @@ export function createApiHandler({
         return json(res, 200, {
           status: "ok",
           service: "buywindow",
-          version: "0.11.0",
+          version: "0.12.0",
         });
       }
 
@@ -269,6 +276,8 @@ export function createApiHandler({
           minimumNetRoi,
           feeRate,
           fixedCosts,
+          resaleProvider,
+          marketEvidenceLimit: Number(url.searchParams.get("marketEvidenceLimit") ?? 10),
         });
         return json(res, 200, {
           generatedAt: new Date().toISOString(),
