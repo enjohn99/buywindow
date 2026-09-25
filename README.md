@@ -58,6 +58,33 @@ npm run demo
 The licensing strategy is intentionally not finalized in v0.1. The planned model is a community edition plus a hosted commercial service; see `docs/LICENSING.md` before public distribution.
 
 
+## Environment setup
+
+BuyWindow has four environment variables required for the core search/catalog workflow:
+
+```dotenv
+GITHUB_TOKEN=...
+GITHUB_OWNER=...
+GITHUB_REPO=buywindow
+SERPAPI_API_KEY=...
+```
+
+Optional variables enable GitHub review issues, API bearer auth, landed-cost tuning, search defaults, and eBay active-market enrichment.
+
+See **[docs/ENVIRONMENT.md](docs/ENVIRONMENT.md)** for the complete required/optional matrix, defaults, and feature readiness.
+
+Verify configuration with:
+
+```bash
+npm run health
+```
+
+or:
+
+```bash
+docker compose run --rm buywindow src/cli/health.js
+```
+
 ## Docker
 
 Build the local image:
