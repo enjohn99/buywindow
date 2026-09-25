@@ -234,3 +234,22 @@ These signals are kept separate from learned product history:
 - once trusted product history is sufficient, product-specific history remains authoritative
 
 These priors are bootstrap knowledge, not a substitute for BuyWindow's future empirical seasonal models.
+
+
+## Arbitrage Mode
+
+BuyWindow v0.11 can scan canonical products for potential retail-arbitrage candidates using trusted price history.
+
+The first scanner uses:
+
+- latest trusted acquisition price
+- trusted historical retail median as a benchmark
+- configurable fee reserve
+- configurable fixed costs
+- configurable minimum benchmark net ROI
+
+A product is surfaced only when it has enough trusted history and clears the selected benchmark ROI threshold after reserves.
+
+Important: the historical retail median is **not** treated as a validated resale price. The scanner returns `validatedResaleMarket: false` and explicitly excludes resale liquidity, marketplace demand, taxes, shipping, storage, returns, and condition from its current evidence model.
+
+This makes v0.11 an opportunity filter rather than a profit guarantee. A future resale-market connector can replace or supplement the retail benchmark with actual observed resale-market evidence.
