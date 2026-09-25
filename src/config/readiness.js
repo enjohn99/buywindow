@@ -20,7 +20,7 @@ export const ENVIRONMENT_VARIABLES = [
     required: true,
     feature: "Git-backed catalog",
     purpose: "GitHub repository used as the canonical BuyWindow database.",
-    defaultValue: "buywindow",
+    defaultValue: undefined,
   },
   {
     name: "SERPAPI_API_KEY",
@@ -114,7 +114,7 @@ export function getReadiness(env = process.env) {
     .filter((entry) => !env[entry.name] && entry.defaultValue === undefined)
     .map((entry) => entry.name);
 
-  const githubReady = Boolean(env.GITHUB_TOKEN && env.GITHUB_OWNER && (env.GITHUB_REPO || "buywindow"));
+  const githubReady = Boolean(env.GITHUB_TOKEN && env.GITHUB_OWNER && env.GITHUB_REPO);
   const searchReady = githubReady && Boolean(env.SERPAPI_API_KEY);
   const ebayCredentials = [Boolean(env.EBAY_CLIENT_ID), Boolean(env.EBAY_CLIENT_SECRET)];
   const ebayPartiallyConfigured = ebayCredentials.some(Boolean) && !ebayCredentials.every(Boolean);
@@ -129,15 +129,13 @@ export function getReadiness(env = process.env) {
       github: {
         ready: githubReady,
         required: true,
-        missing: ["GITHUB_TOKEN", "GITHUB_OWNER", "GITHUB_REPO"].filter(
-          (name) => !env[name] && !(name === "GITHUB_REPO")
-        ),
+        missing: ["GITHUB_TOKEN", "GITHUB_OWNER", "GITHUB_REPO"].filter((name) => !env[name]),
       },
       search: {
         ready: searchReady,
         required: true,
         missing: [
-          ...["GITHUB_TOKEN", "GITHUB_OWNER"].filter((name) => !env[name]),
+          ...["GITHUB_TOKEN", "GITHUB_OWNER", "GITHUB_REPO"].filter((name) => !env[name]),
           ...(!env.SERPAPI_API_KEY ? ["SERPAPI_API_KEY"] : []),
         ],
       },
