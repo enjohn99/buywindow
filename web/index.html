@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0b0f14">
+  <title>BuyWindow — Know when, where, and what to buy</title>
+  <link rel="stylesheet" href="/app/styles.css">
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <a class="brand" href="/app/" aria-label="BuyWindow home">
+        <span class="mark">BW</span>
+        <span>BuyWindow</span>
+      </a>
+      <div class="top-actions">
+        <button id="authButton" class="ghost small" type="button">API access</button>
+        <span id="healthBadge" class="health">Checking…</span>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <p class="eyebrow">PRICE · PLACE · TIME</p>
+        <h1>Know when, where,<br>and what to buy.</h1>
+        <p class="lede">Compare live offers, landed cost, product identity, and confidence — without treating every retailer listing as the same product.</p>
+
+        <form id="searchForm" class="search-panel">
+          <label class="sr-only" for="query">Product</label>
+          <input id="query" name="query" autocomplete="off" placeholder="Search a product, model, or requirement…" required>
+          <button class="primary" type="submit">Find best options</button>
+          <div class="search-options">
+            <label>
+              <span>Location</span>
+              <input id="location" name="location" placeholder="Austin, Texas">
+            </label>
+            <label>
+              <span>Destination ZIP</span>
+              <input id="postalCode" name="postalCode" inputmode="numeric" placeholder="78758">
+            </label>
+            <label>
+              <span>State</span>
+              <input id="state" name="state" maxlength="2" placeholder="TX">
+            </label>
+            <label>
+              <span>Fulfillment</span>
+              <select id="fulfillment" name="fulfillment">
+                <option value="shipping">Shipping</option>
+                <option value="pickup">Pickup</option>
+                <option value="delivery">Delivery</option>
+              </select>
+            </label>
+          </div>
+        </form>
+      </section>
+
+      <section id="statusPanel" class="status-panel hidden" aria-live="polite"></section>
+
+      <section id="resultsSection" class="results-section hidden">
+        <div class="results-head">
+          <div>
+            <p class="eyebrow">RESULTS</p>
+            <h2 id="resultsTitle">Best options</h2>
+          </div>
+          <div id="summaryPills" class="pills"></div>
+        </div>
+        <div id="results" class="results"></div>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="authDialog">
+    <form method="dialog" class="dialog-card">
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">ACCESS</p>
+          <h2>API access</h2>
+        </div>
+        <button value="cancel" class="icon-button" aria-label="Close">×</button>
+      </div>
+      <p class="muted">For a protected deployment, enter the BuyWindow API key. It stays in this browser tab only.</p>
+      <label>
+        <span>Bearer token</span>
+        <input id="apiKey" type="password" autocomplete="off" placeholder="Optional locally">
+      </label>
+      <div class="dialog-actions">
+        <button id="clearKey" type="button" class="ghost">Clear</button>
+        <button id="saveKey" type="button" class="primary">Save for session</button>
+      </div>
+    </form>
+  </dialog>
+
+  <template id="resultTemplate">
+    <article class="result-card">
+      <div class="thumb-wrap"><img class="thumb" alt=""></div>
+      <div class="result-main">
+        <div class="result-topline">
+          <span class="retailer"></span>
+          <span class="classification"></span>
+        </div>
+        <h3 class="title"></h3>
+        <div class="price-row">
+          <strong class="price"></strong>
+          <span class="old-price"></span>
+          <span class="landed"></span>
+        </div>
+        <div class="meta"></div>
+        <div class="confidence-wrap">
+          <div class="confidence-bar"><span></span></div>
+          <small class="confidence-label"></small>
+        </div>
+      </div>
+      <div class="result-actions">
+        <a class="primary link-button retailer-link" target="_blank" rel="noreferrer">View offer</a>
+        <button class="ghost review-button hidden" type="button">Review match</button>
+      </div>
+    </article>
+  </template>
+
+  <script type="module" src="/app/app.js"></script>
+</body>
+</html>
