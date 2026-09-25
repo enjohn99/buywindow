@@ -253,3 +253,19 @@ A product is surfaced only when it has enough trusted history and clears the sel
 Important: the historical retail median is **not** treated as a validated resale price. The scanner returns `validatedResaleMarket: false` and explicitly excludes resale liquidity, marketplace demand, taxes, shipping, storage, returns, and condition from its current evidence model.
 
 This makes v0.11 an opportunity filter rather than a profit guarantee. A future resale-market connector can replace or supplement the retail benchmark with actual observed resale-market evidence.
+
+
+## eBay active resale-market evidence
+
+When `EBAY_CLIENT_ID` and `EBAY_CLIENT_SECRET` are configured, Arbitrage Mode enriches qualifying candidates with eBay Browse API market evidence.
+
+BuyWindow records:
+
+- matching active listing count
+- median active asking price including first reported shipping charge
+- minimum and maximum active asking totals
+- sample active listings
+
+This evidence is intentionally labeled `active_asking_market`. It does **not** claim to be sold/completed transaction data, and returns `validatedSoldPrice: false`.
+
+The eBay Browse API can use an application OAuth token for search-only access. BuyWindow mints and caches that short-lived token server-side; credentials are never exposed to the browser.
