@@ -14,6 +14,7 @@ import { summarizeHistory } from "../history/summarize.js";
 import { composePurchaseDecision } from "../intelligence/decision-composer.js";
 import { scanArbitrageOpportunities } from "../arbitrage/evaluate.js";
 import { EbayBrowseMarketProvider } from "../resale/ebay-browse.js";
+import { getReadiness } from "../config/readiness.js";
 
 const WEB_ROOT = fileURLToPath(new URL("../../web/", import.meta.url));
 
@@ -122,6 +123,7 @@ export function createApiHandler({
   defaultLocation,
   gl = "us",
   hl = "en",
+  readinessEnv = process.env,
 }) {
   return async function handler(req, res) {
     try {
@@ -138,11 +140,7 @@ export function createApiHandler({
       }
 
       if (req.method === "GET" && url.pathname === "/health") {
-        return json(res, 200, {
-          status: "ok",
-          service: "buywindow",
-          version: "0.12.0",
-        });
+        return json(res, 200, getReadiness(readinessEnv));
       }
 
       if (!bearerAuthorized(req, apiKey)) {
@@ -342,10 +340,11 @@ export function createApiHandler({
 }
 
 export function startServer({ env = process.env, dependencies } = {}) {
-  const required = ["GITHUB_TOKEN", "GITHUB_OWNER", "GITHUB_REPO", "SERPAPI_API_KEY"];
-  const missing = required.filter((key) => !env[key]);
-  if (missing.length) {
-    throw new Error(`Missing required environment variables: ${missing.join(", ")}`);
+  const readiness = getReadiness(env);
+  if (readiness.missingRequired.length) {
+    throw new Error(
+      `Missing required environment variables: ${readiness.missingRequired.join(", ")}. See docs/ENVIRONMENT.md.`
+    );
   }
 
   const deps = dependencies ?? createDependencies(env);
@@ -355,6 +354,7 @@ export function startServer({ env = process.env, dependencies } = {}) {
     defaultLocation: env.BUYWINDOW_LOCATION,
     gl: env.BUYWINDOW_GL ?? "us",
     hl: env.BUYWINDOW_HL ?? "en",
+    readinessEnv: env,
   });
 
   const port = Number(env.PORT || 8080);

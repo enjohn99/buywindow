@@ -57,12 +57,25 @@ function dependencies() {
   };
 }
 
-test("health is public", async () => {
-  const handler = createApiHandler({ ...dependencies(), apiKey: "secret" });
+test("health is public and reports feature readiness", async () => {
+  const handler = createApiHandler({
+    ...dependencies(),
+    apiKey: "secret",
+    readinessEnv: {
+      GITHUB_TOKEN: "token",
+      GITHUB_OWNER: "owner",
+      GITHUB_REPO: "repo",
+      SERPAPI_API_KEY: "serp",
+    },
+  });
   await withServer(handler, async (base) => {
     const response = await fetch(`${base}/health`);
     assert.equal(response.status, 200);
-    assert.equal((await response.json()).status, "ok");
+    const body = await response.json();
+    assert.equal(body.status, "ok");
+    assert.equal(body.version, "0.12.1");
+    assert.equal(body.features.search.ready, true);
+    assert.equal(body.features.ebayMarketEvidence.ready, false);
   });
 });
 
