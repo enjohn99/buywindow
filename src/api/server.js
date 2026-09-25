@@ -12,6 +12,7 @@ import { calculateLandedCost } from "../cost/landed-cost.js";
 import { createTaxProviders } from "../tax/provider-chain.js";
 import { summarizeHistory } from "../history/summarize.js";
 import { composePurchaseDecision } from "../intelligence/decision-composer.js";
+import { scanArbitrageOpportunities } from "../arbitrage/evaluate.js";
 
 const WEB_ROOT = fileURLToPath(new URL("../../web/", import.meta.url));
 
@@ -133,7 +134,7 @@ export function createApiHandler({
         return json(res, 200, {
           status: "ok",
           service: "buywindow",
-          version: "0.10.0",
+          version: "0.11.0",
         });
       }
 
@@ -258,6 +259,25 @@ export function createApiHandler({
           overrides: body.overrides ?? {},
         });
         return json(res, 200, resolved);
+      }
+
+      if (req.method === "GET" && url.pathname === "/v1/arbitrage/opportunities") {
+        const minimumNetRoi = Number(url.searchParams.get("minimumNetRoi") ?? 0.25);
+        const feeRate = Number(url.searchParams.get("feeRate") ?? 0.15);
+        const fixedCosts = Number(url.searchParams.get("fixedCosts") ?? 0);
+        const opportunities = await scanArbitrageOpportunities(catalog, {
+          minimumNetRoi,
+          feeRate,
+          fixedCosts,
+        });
+        return json(res, 200, {
+          generatedAt: new Date().toISOString(),
+          benchmarkType: "trusted_historical_retail_median",
+          validatedResaleMarket: false,
+          assumptions: { minimumNetRoi, feeRate, fixedCosts },
+          count: opportunities.length,
+          opportunities,
+        });
       }
 
       if (req.method === "GET" && url.pathname === "/v1/products") {

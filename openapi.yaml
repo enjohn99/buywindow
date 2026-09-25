@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: BuyWindow API
-  version: 0.10.0
+  version: 0.11.0
   description: API for cross-retailer product discovery, canonical identity, trusted price history, and human review.
 servers:
   - url: http://localhost:8080
@@ -192,3 +192,28 @@ paths:
           description: Decision, confidence, rationale, and metrics
         "404":
           description: Product not found
+
+  /v1/arbitrage/opportunities:
+    get:
+      summary: Scan canonical products for historical-retail arbitrage candidates
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: minimumNetRoi
+          schema:
+            type: number
+            default: 0.25
+        - in: query
+          name: feeRate
+          schema:
+            type: number
+            default: 0.15
+        - in: query
+          name: fixedCosts
+          schema:
+            type: number
+            default: 0
+      responses:
+        "200":
+          description: Ranked benchmark opportunities; historical retail benchmark is not validated resale market value
