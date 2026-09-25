@@ -1,10 +1,12 @@
 import { classifyAgainstCatalog, makeReviewRecord } from "../identity/canonicalize.js";
+import { enrichListing } from "../enrichment/listing-enricher.js";
 
-export async function canonicalizeDiscovery({ snapshot, catalog, reviewQueue }) {
+export async function canonicalizeDiscovery({ snapshot, catalog, reviewQueue, enrichment = {} }) {
   const products = await catalog.listCanonicalProducts();
   const results = [];
 
-  for (const listing of snapshot.results) {
+  for (const rawListing of snapshot.results) {
+    const listing = await enrichListing(rawListing, enrichment);
     const classification = classifyAgainstCatalog(products, listing);
     const record = { listing, ...classification };
 
