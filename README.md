@@ -201,3 +201,19 @@ The history API reports descriptive statistics:
 - observation count
 
 BuyWindow deliberately does not issue a Buy/Wait forecast from sparse data. The response exposes `sufficientForTrend` only after at least eight priced observations, and even then v0.8 treats that as readiness for future analysis rather than a recommendation.
+
+
+## Buy / Wait intelligence
+
+BuyWindow v0.9 adds a conservative historical-relative-value decision layer for canonical products.
+
+Possible decisions:
+
+- **BUY** — the latest trusted price is materially low versus the product's observed history.
+- **WAIT** — the latest trusted price is materially high versus observed history and/or recent observations are elevated.
+- **FAIR** — the current price is near the middle of trusted historical observations.
+- **INSUFFICIENT DATA** — BuyWindow withholds a recommendation.
+
+The initial model requires at least 12 trusted priced observations, at least 45 days of history, and a reasonably fresh latest observation. These defaults are intentionally conservative and are returned with the decision metadata.
+
+Important: v0.9 does **not** predict a future price. A `WAIT` result means the current price looks expensive relative to BuyWindow's trusted history; it does not guarantee the price will fall. Future versions can add seasonality and category priors as separate, auditable signals once enough data exists.

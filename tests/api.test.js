@@ -191,5 +191,38 @@ test("history endpoint returns observations and descriptive statistics", async (
     assert.equal(body.summary.medianPrice, 90);
     assert.equal(body.summary.sufficientForTrend, false);
     assert.equal(body.observations.length, 3);
+    assert.equal(body.decision.decision, "insufficient_data");
   });
+});
+
+
+test("decision endpoint returns conservative Buy/Wait analysis", async () => {
+  const deps = dependencies();
+  deps.catalog.getProductHistory = async () => {
+    const start = new Date("2026-01-01T00:00:00Z");
+    const prices = [120,118,121,119,117,122,120,116,119,118,117,89];
+    return prices.map((price, index) => ({
+      observedAt: new Date(start.getTime() + index * 5 * 86400000).toISOString(),
+      price,
+      currency: "USD",
+      retailer: "Demo"
+    }));
+  };
+
+  const realNow = Date.now;
+  Date.now = () => new Date("2026-02-26T00:00:00Z").getTime();
+  try {
+    const handler = createApiHandler({ ...deps, apiKey: "secret" });
+    await withServer(handler, async (base) => {
+      const response = await fetch(`${base}/v1/products/p1/decision`, {
+        headers: { authorization: "Bearer secret" },
+      });
+      assert.equal(response.status, 200);
+      const body = await response.json();
+      assert.ok(["buy", "wait", "fair", "insufficient_data"].includes(body.decision.decision));
+      assert.equal(body.decision.model.predictsFuturePrice, false);
+    });
+  } finally {
+    Date.now = realNow;
+  }
 });

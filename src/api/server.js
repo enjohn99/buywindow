@@ -11,6 +11,7 @@ import { GitHubCatalogStore } from "../storage/github.js";
 import { calculateLandedCost } from "../cost/landed-cost.js";
 import { createTaxProviders } from "../tax/provider-chain.js";
 import { summarizeHistory } from "../history/summarize.js";
+import { evaluateBuyWait } from "../intelligence/buy-wait.js";
 
 const WEB_ROOT = fileURLToPath(new URL("../../web/", import.meta.url));
 
@@ -132,7 +133,7 @@ export function createApiHandler({
         return json(res, 200, {
           status: "ok",
           service: "buywindow",
-          version: "0.6.0",
+          version: "0.9.0",
         });
       }
 
@@ -276,7 +277,20 @@ export function createApiHandler({
         return json(res, 200, {
           product,
           summary: summarizeHistory(observations ?? []),
+          decision: evaluateBuyWait(observations ?? []),
           observations: observations ?? [],
+        });
+      }
+
+      const decisionMatch = url.pathname.match(/^\/v1\/products\/([^/]+)\/decision$/);
+      if (decisionMatch && req.method === "GET") {
+        const productId = decodeURIComponent(decisionMatch[1]);
+        const product = await catalog.getProductById(productId);
+        if (!product) return json(res, 404, { error: "product not found" });
+        const observations = await catalog.getProductHistory(productId, { limit: 2000 });
+        return json(res, 200, {
+          productId,
+          decision: evaluateBuyWait(observations ?? []),
         });
       }
 

@@ -302,6 +302,8 @@ async function loadCatalog() {
 
 async function openHistory(productId) {
   $("#historyTitle").textContent = "Product history";
+  $("#decisionPanel").className = "decision-panel hidden";
+  $("#decisionPanel").innerHTML = "";
   $("#historyStats").innerHTML = "";
   $("#historyNotice").textContent = "Loading observed prices…";
   $("#historyList").innerHTML = "";
@@ -316,7 +318,28 @@ async function openHistory(productId) {
 
     const product = body.product ?? {};
     const summary = body.summary ?? {};
+    const decision = body.decision ?? {};
     $("#historyTitle").textContent = `${product.brand || ""} ${product.name || product.productId}`.trim();
+
+    const panel = $("#decisionPanel");
+    panel.className = `decision-panel ${decision.decision || "insufficient_data"}`;
+    const label = {
+      buy: "BUY",
+      wait: "WAIT",
+      fair: "FAIR",
+      insufficient_data: "INSUFFICIENT DATA",
+    }[decision.decision] || humanize(decision.decision || "insufficient_data");
+
+    panel.innerHTML = `
+      <div class="decision-head">
+        <div class="decision-label">${label}</div>
+        <div class="decision-confidence">${decision.confidence ? Math.round(decision.confidence * 100) + "% confidence" : "No confidence score yet"}</div>
+      </div>
+      <ul class="decision-reasons">
+        ${(decision.reasons ?? []).map((reason) => `<li>${reason}</li>`).join("")}
+      </ul>
+      <div class="decision-meta">${decision.model?.predictsFuturePrice === false ? "Historical-relative-value model · does not predict future price" : ""}</div>
+    `;
 
     const stats = [
       ["Latest", summary.latestPrice != null ? money(summary.latestPrice, summary.latestCurrency || "USD") : "—"],
@@ -329,9 +352,9 @@ async function openHistory(productId) {
       .map(([label, value]) => `<div class="stat"><span>${label}</span><strong>${value}</strong></div>`)
       .join("");
 
-    $("#historyNotice").textContent = summary.sufficientForTrend
-      ? "Enough observations exist to begin trend analysis, but BuyWindow is not issuing a Buy/Wait forecast yet."
-      : "Not enough trusted history yet for a reliable Buy/Wait trend. BuyWindow is showing observed prices only.";
+    $("#historyNotice").textContent = decision.decision === "insufficient_data"
+      ? "BuyWindow is withholding a recommendation until the trusted dataset meets its minimum evidence threshold."
+      : "The decision above compares the current trusted price with BuyWindow's observed history. It is not a future-price forecast.";
 
     const observations = body.observations ?? [];
     if (!observations.length) {
