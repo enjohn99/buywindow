@@ -7,7 +7,7 @@ test("canonicalization uses inferred brand/model before matching", async () => {
     productId: "dewalt-dcd996b",
     brand: "DEWALT",
     name: "20V MAX XR Brushless Hammer Drill Bare Tool",
-    identifiers: { manufacturerModel: "DCD996B" },
+    identifiers: { manufacturerModel: "DCD996B", upc: "885911486922" },
     specifications: {},
     packageContents: [],
     imageEvidence: [],
@@ -21,6 +21,7 @@ test("canonicalization uses inferred brand/model before matching", async () => {
       assert.equal(savedProduct.productId, product.productId);
       assert.equal(listing.brand, "Dewalt");
       assert.equal(listing.identifiers.manufacturerModel, "DCD996B");
+      assert.equal(listing.identifiers.upc, "885911486922");
       writes.listings += 1;
     },
     async appendObservation() { writes.observations += 1; },
@@ -37,7 +38,7 @@ test("canonicalization uses inferred brand/model before matching", async () => {
       retailer: "Demo Store",
       source: "test",
       url: "https://example.com/item",
-      title: "DEWALT DCD996B 20V MAX XR Hammer Drill",
+      title: "DEWALT DCD996B 20V MAX XR Hammer Drill UPC 885911486922",
       identifiers: {},
       specifications: {},
       packageContents: [],
@@ -55,6 +56,7 @@ test("canonicalization uses inferred brand/model before matching", async () => {
 
   assert.equal(report.results[0].classification, "same_product");
   assert.equal(report.results[0].listing.identifiers.manufacturerModel, "DCD996B");
+  assert.equal(report.results[0].listing.identifiers.upc, "885911486922");
   assert.equal(writes.listings, 1);
   assert.equal(writes.observations, 1);
   assert.equal(writes.reviews, 0);
