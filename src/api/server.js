@@ -15,6 +15,7 @@ import { composePurchaseDecision } from "../intelligence/decision-composer.js";
 import { scanArbitrageOpportunities } from "../arbitrage/evaluate.js";
 import { EbayBrowseMarketProvider } from "../resale/ebay-browse.js";
 import { getReadiness } from "../config/readiness.js";
+import { normalizeWatchItem } from "../watchlist/service.js";
 
 const WEB_ROOT = fileURLToPath(new URL("../../web/", import.meta.url));
 
@@ -267,6 +268,31 @@ export function createApiHandler({
           overrides: body.overrides ?? {},
         });
         return json(res, 200, resolved);
+      }
+
+      if (req.method === "GET" && url.pathname === "/v1/watchlist") {
+        const watchlist = await catalog.getWatchlist();
+        return json(res, 200, watchlist);
+      }
+
+      if (req.method === "POST" && url.pathname === "/v1/watchlist") {
+        const body = await readJson(req);
+        const watchlist = await catalog.getWatchlist();
+        const item = normalizeWatchItem(body);
+        const items = [...(watchlist.items ?? []).filter((existing) => existing.watchId !== item.watchId), item];
+        const saved = await catalog.saveWatchlist({ items });
+        return json(res, 201, { item, watchlist: saved });
+      }
+
+      const watchMatch = url.pathname.match(/^\/v1\/watchlist\/([^/]+)$/);
+      if (watchMatch && req.method === "DELETE") {
+        const watchId = decodeURIComponent(watchMatch[1]);
+        const watchlist = await catalog.getWatchlist();
+        const before = watchlist.items ?? [];
+        const items = before.filter((item) => item.watchId !== watchId);
+        if (items.length === before.length) return json(res, 404, { error: "watch item not found" });
+        const saved = await catalog.saveWatchlist({ items });
+        return json(res, 200, { removedWatchId: watchId, watchlist: saved });
       }
 
       if (req.method === "GET" && url.pathname === "/v1/arbitrage/opportunities") {
