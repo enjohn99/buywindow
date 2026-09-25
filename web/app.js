@@ -386,3 +386,60 @@ async function openHistory(productId) {
 $("#catalogButton").addEventListener("click", loadCatalog);
 $("#closeCatalog").addEventListener("click", () => $("#catalogDialog").close());
 $("#closeHistory").addEventListener("click", () => $("#historyDialog").close());
+
+
+async function runArbitrageScan() {
+  const minRoi = Number($("#arbMinRoi").value || 0.25);
+  const feeRate = Number($("#arbFeeRate").value || 0.15);
+  const fixedCosts = Number($("#arbFixedCosts").value || 0);
+  $("#arbitrageStatus").textContent = "Scanning trusted catalog history…";
+  $("#arbitrageList").innerHTML = "";
+
+  try {
+    const params = new URLSearchParams({
+      minimumNetRoi: String(minRoi),
+      feeRate: String(feeRate),
+      fixedCosts: String(fixedCosts),
+    });
+    const response = await fetch(`/v1/arbitrage/opportunities?${params}`, {
+      headers: headers(),
+    });
+    const body = await response.json();
+    if (!response.ok) throw new Error(body.error || "Unable to scan arbitrage opportunities");
+
+    $("#arbitrageStatus").textContent = body.count
+      ? `${body.count} candidate${body.count === 1 ? "" : "s"} cleared the benchmark threshold. Historical retail benchmarks are not validated resale prices.`
+      : "No products currently clear the selected benchmark ROI threshold.";
+
+    for (const item of body.opportunities ?? []) {
+      const card = document.createElement("article");
+      card.className = "arbitrage-card";
+      card.innerHTML = `
+        <div class="arbitrage-head">
+          <div>
+            <strong>${item.brand || ""} ${item.name || item.productId}</strong>
+            <div class="muted">${item.acquisitionRetailer || "Retailer"} · observed ${new Date(item.acquisitionObservedAt).toLocaleDateString()}</div>
+          </div>
+          <div class="arbitrage-roi">${Math.round(item.economics.netRoiBenchmark * 100)}% ROI*</div>
+        </div>
+        <div class="arbitrage-grid">
+          <div class="stat"><span>Acquire</span><strong>${money(item.acquisitionPrice, item.currency)}</strong></div>
+          <div class="stat"><span>Hist. median</span><strong>${money(item.benchmark.value, item.currency)}</strong></div>
+          <div class="stat"><span>Fee reserve</span><strong>${money(item.economics.estimatedFees, item.currency)}</strong></div>
+          <div class="stat"><span>Net spread*</span><strong>${money(item.economics.netSpreadBenchmark, item.currency)}</strong></div>
+        </div>
+        <div class="caveat">*Benchmark economics only. Historical retail median is not a guaranteed resale price; resale demand, liquidity, taxes, shipping, storage, returns, and condition are not yet validated.</div>
+      `;
+      $("#arbitrageList").append(card);
+    }
+  } catch (error) {
+    $("#arbitrageStatus").textContent = error.message || String(error);
+  }
+}
+
+$("#arbitrageButton").addEventListener("click", () => {
+  $("#arbitrageDialog").showModal();
+  runArbitrageScan();
+});
+$("#runArbitrage").addEventListener("click", runArbitrageScan);
+$("#closeArbitrage").addEventListener("click", () => $("#arbitrageDialog").close());
