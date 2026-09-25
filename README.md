@@ -158,3 +158,31 @@ curl -X POST http://localhost:8080/v1/search \
     "fulfillment":"shipping"
   }'
 ```
+
+
+## Web app
+
+The same Docker container serves the BuyWindow web interface at:
+
+```
+http://localhost:8080/app/
+```
+
+Start it with:
+
+```bash
+docker compose up --build
+```
+
+The first UI supports:
+
+- product/model search
+- location and destination inputs
+- ranked live retailer offers
+- listed vs landed-cost display
+- identity classification and confidence
+- retailer links
+- in-browser human review resolution
+- optional session-only bearer-token entry for protected deployments
+
+The UI intentionally uses the public HTTP API rather than importing engine internals, keeping the frontend replaceable as the product matures.
