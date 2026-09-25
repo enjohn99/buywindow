@@ -1,4 +1,7 @@
 import http from "node:http";
+import { readFile } from "node:fs/promises";
+import { extname, join, normalize } from "node:path";
+import { fileURLToPath } from "node:url";
 import { SerpApiGoogleShoppingAdapter } from "../adapters/serpapi-google-shopping.js";
 import { runDiscovery } from "../engine/discovery.js";
 import { canonicalizeDiscovery } from "../engine/canonicalize-discovery.js";
@@ -7,6 +10,39 @@ import { GitHubIssueReviewQueue } from "../review/github-issues.js";
 import { GitHubCatalogStore } from "../storage/github.js";
 import { calculateLandedCost } from "../cost/landed-cost.js";
 import { createTaxProviders } from "../tax/provider-chain.js";
+
+const WEB_ROOT = fileURLToPath(new URL("../../web/", import.meta.url));
+
+const MIME = {
+  ".html": "text/html; charset=utf-8",
+  ".css": "text/css; charset=utf-8",
+  ".js": "text/javascript; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".svg": "image/svg+xml",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".webp": "image/webp",
+};
+
+async function serveAppAsset(pathname, res) {
+  let relative = pathname === "/app" || pathname === "/app/" ? "index.html" : pathname.slice("/app/".length);
+  relative = normalize(relative).replace(/^([.][.][/\\])+/, "");
+  const filePath = join(WEB_ROOT, relative);
+  if (!filePath.startsWith(WEB_ROOT)) return false;
+  try {
+    const content = await readFile(filePath);
+    res.writeHead(200, {
+      "content-type": MIME[extname(filePath)] || "application/octet-stream",
+      "content-length": content.length,
+      "cache-control": relative === "index.html" ? "no-cache" : "public, max-age=3600",
+    });
+    res.end(content);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 function json(res, status, body) {
   const payload = JSON.stringify(body);
@@ -80,6 +116,16 @@ export function createApiHandler({
   return async function handler(req, res) {
     try {
       const url = new URL(req.url, "http://localhost");
+
+      if (req.method === "GET" && (url.pathname === "/" || url.pathname.startsWith("/app"))) {
+        if (url.pathname === "/") {
+          res.writeHead(302, { location: "/app/" });
+          res.end();
+          return;
+        }
+        if (await serveAppAsset(url.pathname, res)) return;
+        return json(res, 404, { error: "asset not found" });
+      }
 
       if (req.method === "GET" && url.pathname === "/health") {
         return json(res, 200, {
