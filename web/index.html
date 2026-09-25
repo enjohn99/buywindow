@@ -15,6 +15,7 @@
         <span>BuyWindow</span>
       </a>
       <div class="top-actions">
+        <button id="arbitrageButton" class="ghost small" type="button">Arbitrage</button>
         <button id="catalogButton" class="ghost small" type="button">Catalog</button>
         <button id="authButton" class="ghost small" type="button">API access</button>
         <span id="healthBadge" class="health">Checking…</span>
@@ -114,6 +115,27 @@
         <input id="reviewNote" placeholder="Why this decision is correct">
       </label>
       <p id="reviewStatus" class="muted"></p>
+    </div>
+  </dialog>
+
+  <dialog id="arbitrageDialog">
+    <div class="dialog-card wide-dialog">
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">ARBITRAGE MODE</p>
+          <h2>Opportunity scanner</h2>
+        </div>
+        <button id="closeArbitrage" class="icon-button" aria-label="Close">×</button>
+      </div>
+      <p class="muted">Candidates compare the latest trusted acquisition price with BuyWindow's historical retail median. Resale demand is not yet validated.</p>
+      <div class="arbitrage-controls">
+        <label><span>Minimum benchmark ROI</span><input id="arbMinRoi" type="number" min="0" step="0.05" value="0.25"></label>
+        <label><span>Fee reserve</span><input id="arbFeeRate" type="number" min="0" max="1" step="0.01" value="0.15"></label>
+        <label><span>Fixed costs</span><input id="arbFixedCosts" type="number" min="0" step="1" value="0"></label>
+        <button id="runArbitrage" class="primary" type="button">Scan</button>
+      </div>
+      <div id="arbitrageStatus" class="history-notice">Run a scan to evaluate canonical products with sufficient history.</div>
+      <div id="arbitrageList" class="arbitrage-list"></div>
     </div>
   </dialog>
 
