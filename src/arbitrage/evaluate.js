@@ -113,7 +113,24 @@ export async function scanArbitrageOpportunities(catalog, options = {}) {
       limit: options.historyLimit ?? 2000,
     });
     const result = evaluateArbitrageCandidate(product, observations ?? [], options);
-    if (result.status === "candidate") opportunities.push(result);
+    if (result.status === "candidate") {
+      if (options.resaleProvider && opportunities.length < (options.marketEvidenceLimit ?? 10)) {
+        try {
+          result.resaleMarket = await options.resaleProvider.searchProduct(product, {
+            limit: options.marketListingLimit ?? 50,
+          });
+        } catch (error) {
+          result.resaleMarket = {
+            status: "error",
+            provider: "ebay_browse",
+            reason: String(error),
+            evidenceType: "active_asking_market",
+            validatedSoldPrice: false,
+          };
+        }
+      }
+      opportunities.push(result);
+    }
   }
 
   opportunities.sort((a, b) => b.economics.netRoiBenchmark - a.economics.netRoiBenchmark);

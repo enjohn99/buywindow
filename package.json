@@ -1,6 +1,6 @@
 {
   "name": "buywindow",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "private": true,
   "description": "Git-backed product intelligence engine for canonical product identity, price observations, and human-reviewed matching.",
   "type": "module",
@@ -11,7 +11,7 @@
     "test": "node --test",
     "demo": "node src/cli/demo.js",
     "search": "node src/cli/search.js",
-    "check": "node --check src/identity/matcher.js && node --check src/identity/canonicalize.js && node --check src/storage/github.js && node --check src/engine/ingest.js && node --check src/engine/discovery.js && node --check src/engine/canonicalize-discovery.js && node --check src/adapters/serpapi-google-shopping.js && node --check src/cli/search.js && node --check src/engine/review-resolver.js && node --check src/review/github-issues.js && node --check src/cli/review.js && node --check src/api/server.js && node --check src/cost/landed-cost.js && node --check src/tax/jurisdiction-rules.js && node --check src/tax/provider-chain.js && node --check src/tax/types.js && node --check web/app.js && node --check src/history/summarize.js && node --check src/intelligence/buy-wait.js && node --check src/intelligence/seasonality-priors.js && node --check src/intelligence/decision-composer.js && node --check src/arbitrage/evaluate.js",
+    "check": "node --check src/identity/matcher.js && node --check src/identity/canonicalize.js && node --check src/storage/github.js && node --check src/engine/ingest.js && node --check src/engine/discovery.js && node --check src/engine/canonicalize-discovery.js && node --check src/adapters/serpapi-google-shopping.js && node --check src/cli/search.js && node --check src/engine/review-resolver.js && node --check src/review/github-issues.js && node --check src/cli/review.js && node --check src/api/server.js && node --check src/cost/landed-cost.js && node --check src/tax/jurisdiction-rules.js && node --check src/tax/provider-chain.js && node --check src/tax/types.js && node --check web/app.js && node --check src/history/summarize.js && node --check src/intelligence/buy-wait.js && node --check src/intelligence/seasonality-priors.js && node --check src/intelligence/decision-composer.js && node --check src/arbitrage/evaluate.js && node --check src/resale/ebay-browse.js && node --check src/resale/evidence.js",
     "health": "node src/cli/health.js",
     "docker:search": "docker compose run --rm buywindow src/cli/search.js",
     "review": "node src/cli/review.js",

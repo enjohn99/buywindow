@@ -428,7 +428,12 @@ async function runArbitrageScan() {
           <div class="stat"><span>Fee reserve</span><strong>${money(item.economics.estimatedFees, item.currency)}</strong></div>
           <div class="stat"><span>Net spread*</span><strong>${money(item.economics.netSpreadBenchmark, item.currency)}</strong></div>
         </div>
-        <div class="caveat">*Benchmark economics only. Historical retail median is not a guaranteed resale price; resale demand, liquidity, taxes, shipping, storage, returns, and condition are not yet validated.</div>
+        <div class="caveat">
+          *Benchmark economics only. Historical retail median is not a guaranteed resale price.
+          ${item.resaleMarket?.status === "available"
+            ? ` eBay active market: ${item.resaleMarket.totalMatchingEntries} matching listings, median ask ${money(item.resaleMarket.medianAskingTotal, item.resaleMarket.currency || item.currency)}. These are active asking prices, not sold comps.`
+            : " Live resale-market evidence is not configured or unavailable."}
+        </div>
       `;
       $("#arbitrageList").append(card);
     }
