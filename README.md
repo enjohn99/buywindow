@@ -186,3 +186,18 @@ The first UI supports:
 - optional session-only bearer-token entry for protected deployments
 
 The UI intentionally uses the public HTTP API rather than importing engine internals, keeping the frontend replaceable as the product matures.
+
+
+## Product history
+
+Canonical products can now be browsed from the web app's **Catalog** button. Product detail history shows only trusted observations that have passed automatic identity matching or human review.
+
+The history API reports descriptive statistics:
+
+- latest observed price
+- minimum observed price
+- maximum observed price
+- median observed price
+- observation count
+
+BuyWindow deliberately does not issue a Buy/Wait forecast from sparse data. The response exposes `sufficientForTrend` only after at least eight priced observations, and even then v0.8 treats that as readiness for future analysis rather than a recommendation.

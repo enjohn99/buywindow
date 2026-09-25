@@ -89,6 +89,24 @@ export class GitHubCatalogStore {
     return current?.text ? JSON.parse(current.text) : undefined;
   }
 
+  async listDirectory(path) {
+    const response = await fetch(
+      `${this.endpoint(path)}?ref=${encodeURIComponent(this.branch)}`,
+      { headers: this.headers() }
+    );
+    if (response.status === 404) return [];
+    if (!response.ok) {
+      throw new Error(`GitHub directory read failed (${response.status}): ${await response.text()}`);
+    }
+    const body = await response.json();
+    return Array.isArray(body) ? body : [];
+  }
+
+  async listCatalogIndex() {
+    const index = await this.readJson(catalogIndexPath());
+    return index?.products ?? [];
+  }
+
   async listCanonicalProducts() {
     const index = await this.readJson(catalogIndexPath());
     if (!index?.products?.length) return [];
@@ -105,6 +123,42 @@ export class GitHubCatalogStore {
     const item = index?.products?.find((entry) => entry.productId === productId);
     if (!item) return undefined;
     return this.readJson(item.path);
+  }
+
+  async getProductHistory(productId, { limit = 500 } = {}) {
+    const index = await this.readJson(catalogIndexPath());
+    const item = index?.products?.find((entry) => entry.productId === productId);
+    if (!item) return undefined;
+
+    const root = item.path.replace(/\/product\.json$/, "");
+    const years = (await this.listDirectory(`${root}/observations`))
+      .filter((entry) => entry.type === "dir")
+      .sort((a, b) => b.name.localeCompare(a.name));
+
+    const observations = [];
+    for (const year of years) {
+      const files = (await this.listDirectory(year.path))
+        .filter((entry) => entry.type === "file" && entry.name.endsWith(".jsonl"))
+        .sort((a, b) => b.name.localeCompare(a.name));
+
+      for (const file of files) {
+        const current = await this.readText(file.path);
+        if (!current?.text) continue;
+        for (const line of current.text.split("\n")) {
+          if (!line.trim()) continue;
+          try {
+            observations.push(JSON.parse(line));
+          } catch {
+            // Ignore a malformed historical line rather than failing the full product history.
+          }
+        }
+        if (observations.length >= limit) break;
+      }
+      if (observations.length >= limit) break;
+    }
+
+    observations.sort((a, b) => new Date(a.observedAt) - new Date(b.observedAt));
+    return observations.slice(-limit);
   }
 
   async getReview(reviewId) {

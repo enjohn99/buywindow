@@ -15,6 +15,7 @@
         <span>BuyWindow</span>
       </a>
       <div class="top-actions">
+        <button id="catalogButton" class="ghost small" type="button">Catalog</button>
         <button id="authButton" class="ghost small" type="button">API access</button>
         <span id="healthBadge" class="health">Checking…</span>
       </div>
@@ -116,6 +117,34 @@
     </div>
   </dialog>
 
+  <dialog id="catalogDialog">
+    <div class="dialog-card wide-dialog">
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">CATALOG</p>
+          <h2>Canonical products</h2>
+        </div>
+        <button id="closeCatalog" class="icon-button" aria-label="Close">×</button>
+      </div>
+      <div id="catalogList" class="catalog-list"></div>
+    </div>
+  </dialog>
+
+  <dialog id="historyDialog">
+    <div class="dialog-card wide-dialog">
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">PRICE HISTORY</p>
+          <h2 id="historyTitle">Product history</h2>
+        </div>
+        <button id="closeHistory" class="icon-button" aria-label="Close">×</button>
+      </div>
+      <div id="historyStats" class="history-stats"></div>
+      <div id="historyNotice" class="history-notice"></div>
+      <div id="historyList" class="history-list"></div>
+    </div>
+  </dialog>
+
   <template id="resultTemplate">
     <article class="result-card">
       <div class="thumb-wrap"><img class="thumb" alt=""></div>
@@ -138,6 +167,7 @@
       </div>
       <div class="result-actions">
         <a class="primary link-button retailer-link" target="_blank" rel="noreferrer">View offer</a>
+        <button class="ghost history-button hidden" type="button">Price history</button>
         <button class="ghost review-button hidden" type="button">Review match</button>
       </div>
     </article>

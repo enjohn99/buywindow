@@ -24,6 +24,16 @@ function dependencies() {
       async saveCanonicalizationReport() {},
       async getReview(id) { return id === "known" ? { reviewId: id, status: "pending" } : undefined; },
       async getProductById(id) { return id === "p1" ? { productId: "p1", brand: "Demo", name: "Product" } : undefined; },
+      async listCatalogIndex() { return [{ productId: "p1", brand: "Demo", name: "Product", identifiers: {} }]; },
+      async getProductHistory(id) {
+        return id === "p1"
+          ? [
+              { observedAt: "2026-09-01T00:00:00Z", price: 100, currency: "USD", retailer: "A" },
+              { observedAt: "2026-09-02T00:00:00Z", price: 80, currency: "USD", retailer: "B" },
+              { observedAt: "2026-09-03T00:00:00Z", price: 90, currency: "USD", retailer: "C" }
+            ]
+          : undefined;
+      },
     },
     adapter: {
       retailer: "test",
@@ -152,5 +162,34 @@ test("serves the BuyWindow web app", async () => {
     assert.equal(app.status, 200);
     assert.match(app.headers.get("content-type"), /text\/html/);
     assert.match(await app.text(), /Know when, where/);
+  });
+});
+
+
+test("catalog endpoint returns canonical product summaries", async () => {
+  const handler = createApiHandler({ ...dependencies(), apiKey: "secret" });
+  await withServer(handler, async (base) => {
+    const response = await fetch(`${base}/v1/products`, {
+      headers: { authorization: "Bearer secret" },
+    });
+    assert.equal(response.status, 200);
+    const body = await response.json();
+    assert.equal(body.products[0].productId, "p1");
+  });
+});
+
+test("history endpoint returns observations and descriptive statistics", async () => {
+  const handler = createApiHandler({ ...dependencies(), apiKey: "secret" });
+  await withServer(handler, async (base) => {
+    const response = await fetch(`${base}/v1/products/p1/history`, {
+      headers: { authorization: "Bearer secret" },
+    });
+    assert.equal(response.status, 200);
+    const body = await response.json();
+    assert.equal(body.summary.minPrice, 80);
+    assert.equal(body.summary.maxPrice, 100);
+    assert.equal(body.summary.medianPrice, 90);
+    assert.equal(body.summary.sufficientForTrend, false);
+    assert.equal(body.observations.length, 3);
   });
 });
