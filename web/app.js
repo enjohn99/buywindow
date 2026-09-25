@@ -328,6 +328,8 @@ async function openHistory(productId) {
       wait: "WAIT",
       fair: "FAIR",
       insufficient_data: "INSUFFICIENT DATA",
+      consider_buying: "CONSIDER BUYING",
+      consider_waiting: "CONSIDER WAITING",
     }[decision.decision] || humanize(decision.decision || "insufficient_data");
 
     panel.innerHTML = `
@@ -338,7 +340,7 @@ async function openHistory(productId) {
       <ul class="decision-reasons">
         ${(decision.reasons ?? []).map((reason) => `<li>${reason}</li>`).join("")}
       </ul>
-      <div class="decision-meta">${decision.model?.predictsFuturePrice === false ? "Historical-relative-value model · does not predict future price" : ""}</div>
+      <div class="decision-meta">${decision.model?.categoryPriorOnly ? "Category seasonality prior · low-confidence advisory · not learned from BuyWindow data" : decision.model?.predictsFuturePrice === false ? "Historical-relative-value model · does not predict future price" : ""}</div>
     `;
 
     const stats = [
