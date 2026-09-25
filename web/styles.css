@@ -120,3 +120,6 @@ dialog::backdrop { background:rgba(0,0,0,.68); backdrop-filter:blur(5px); }
 .decision-confidence { color:var(--muted); font-size:13px; }
 .decision-reasons { margin:12px 0 0; padding-left:18px; color:var(--muted); line-height:1.55; }
 .decision-meta { margin-top:10px; font-size:12px; color:var(--muted); }
+
+.decision-panel.consider_buying { border-color:#41654f; background:#101b15; }
+.decision-panel.consider_waiting { border-color:#68543b; background:#1d1710; }
