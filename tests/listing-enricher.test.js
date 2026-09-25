@@ -32,7 +32,7 @@ test("hashes image bytes without blocking on provider-specific metadata", async 
     title: "Demo",
     identifiers: {},
     imageEvidence: [{ sourceUrl: "https://example.com/image.jpg" }],
-  }, { fetchImpl });
+  }, { fetchImpl, hashImages: true });
   assert.equal(enriched.imageEvidence[0].sha256.length, 64);
   assert.equal(enriched.imageEvidence[0].byteLength, 10);
 });
@@ -43,6 +43,6 @@ test("image hash failures are recorded and non-fatal", async () => {
     title: "Demo",
     identifiers: {},
     imageEvidence: [{ sourceUrl: "https://example.com/image.jpg" }],
-  }, { fetchImpl });
+  }, { fetchImpl, hashImages: true });
   assert.match(enriched.imageEvidence[0].enrichmentError, /503/);
 });
