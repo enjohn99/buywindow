@@ -31,6 +31,7 @@ Without all four values, live search is not considered ready.
 | `BUYWINDOW_API_KEY` | none | HTTP API | Optional bearer token protecting `/v1/*`. Recommended for hosted deployments. |
 | `PORT` | `8080` | HTTP API | HTTP listen port. |
 | `BUYWINDOW_TAX_MAX_RESULTS` | `10` | Landed cost | Maximum number of per-search tax calculations. |
+| `BUYWINDOW_IMAGE_HASHING` | `false` | Product enrichment | When `true`, downloads listing images and stores SHA-256 evidence for exact visual identity matching. |
 | `EBAY_CLIENT_ID` | none | eBay market evidence | eBay application client ID. |
 | `EBAY_CLIENT_SECRET` | none | eBay market evidence | eBay application client secret. Keep server-side only. |
 | `EBAY_MARKETPLACE_ID` | `EBAY_US` | eBay market evidence | eBay marketplace used for Browse API searches. |
