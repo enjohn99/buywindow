@@ -109,3 +109,14 @@ dialog::backdrop { background:rgba(0,0,0,.68); backdrop-filter:blur(5px); }
   .history-stats { grid-template-columns:1fr 1fr; }
   .catalog-item { align-items:flex-start; flex-direction:column; }
 }
+
+.decision-panel { margin-top:18px; border:1px solid var(--line); border-radius:16px; padding:16px; background:#0b1016; }
+.decision-panel.buy { border-color:#2a684c; background:#0d1d16; }
+.decision-panel.wait { border-color:#755438; background:#21170f; }
+.decision-panel.fair { border-color:#43536b; background:#111821; }
+.decision-panel.insufficient_data { border-color:var(--line); }
+.decision-head { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; }
+.decision-label { font-size:30px; font-weight:900; letter-spacing:-.04em; }
+.decision-confidence { color:var(--muted); font-size:13px; }
+.decision-reasons { margin:12px 0 0; padding-left:18px; color:var(--muted); line-height:1.55; }
+.decision-meta { margin-top:10px; font-size:12px; color:var(--muted); }
