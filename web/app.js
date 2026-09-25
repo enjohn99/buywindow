@@ -3,6 +3,7 @@ const $ = (selector) => document.querySelector(selector);
 const state = {
   token: sessionStorage.getItem("buywindow_api_key") || "",
   results: [],
+  activeReviewId: null,
 };
 
 function headers() {
@@ -107,10 +108,7 @@ function renderResults(data) {
     const review = card.querySelector(".review-button");
     if (item.reviewId) {
       review.classList.remove("hidden");
-      review.addEventListener("click", () => {
-        navigator.clipboard?.writeText(item.reviewId);
-        setStatus(`Review ID copied: ${item.reviewId}. Use the review API/CLI to resolve it.`);
-      });
+      review.addEventListener("click", () => openReview(item.reviewId));
     }
 
     container.append(card);
@@ -187,3 +185,74 @@ $("#clearKey").addEventListener("click", () => {
   $("#apiKey").value = "";
 });
 checkHealth();
+
+
+async function openReview(reviewId) {
+  state.activeReviewId = reviewId;
+  $("#reviewStatus").textContent = "Loading review…";
+  $("#reviewDetails").innerHTML = "";
+  $("#reviewNote").value = "";
+  $("#reviewDialog").showModal();
+
+  try {
+    const response = await fetch(`/v1/reviews/${encodeURIComponent(reviewId)}`, {
+      headers: headers(),
+    });
+    const body = await response.json();
+    if (!response.ok) throw new Error(body.error || "Unable to load review");
+
+    const c = body.classification ?? {};
+    const listing = body.candidateListing ?? {};
+    $("#reviewDetails").innerHTML = `
+      <strong>${listing.title || "Untitled listing"}</strong>
+      <p>${listing.retailer || "Unknown retailer"}</p>
+      <p>Suggested: ${humanize(c.classification || "unknown")} · ${Math.round(Number(c.confidence || 0) * 100)}% confidence</p>
+      <p>Target: ${c.proposedProductId || c.relatedProductId || c.productId || "No canonical target yet"}</p>
+    `;
+    $("#reviewStatus").textContent = "";
+  } catch (error) {
+    $("#reviewStatus").textContent = error.message || String(error);
+  }
+}
+
+async function resolveActiveReview(action) {
+  if (!state.activeReviewId) return;
+  const buttons = [...document.querySelectorAll("[data-review-action]")];
+  buttons.forEach((button) => button.disabled = true);
+  $("#reviewStatus").textContent = `Resolving as ${humanize(action)}…`;
+
+  try {
+    const response = await fetch(
+      `/v1/reviews/${encodeURIComponent(state.activeReviewId)}/resolve`,
+      {
+        method: "POST",
+        headers: headers(),
+        body: JSON.stringify({
+          action,
+          reviewer: "web-ui",
+          note: $("#reviewNote").value.trim() || undefined,
+        }),
+      }
+    );
+    const body = await response.json();
+    if (!response.ok) throw new Error(body.error || "Unable to resolve review");
+
+    $("#reviewStatus").textContent = `Resolved as ${humanize(action)}.`;
+    const reviewId = state.activeReviewId;
+    state.results = state.results.map((item) =>
+      item.reviewId === reviewId
+        ? { ...item, reviewId: undefined, classification: action === "same_product" ? "same_product" : action }
+        : item
+    );
+    setTimeout(() => $("#reviewDialog").close(), 350);
+  } catch (error) {
+    $("#reviewStatus").textContent = error.message || String(error);
+  } finally {
+    buttons.forEach((button) => button.disabled = false);
+  }
+}
+
+document.querySelectorAll("[data-review-action]").forEach((button) => {
+  button.addEventListener("click", () => resolveActiveReview(button.dataset.reviewAction));
+});
+$("#closeReview").addEventListener("click", () => $("#reviewDialog").close());
