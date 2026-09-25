@@ -7,6 +7,7 @@ COPY src ./src
 COPY schemas ./schemas
 COPY docs ./docs
 COPY tests ./tests
+COPY web ./web
 COPY README.md ./
 COPY .env.example ./
 
