@@ -24,6 +24,7 @@ function dependencies() {
       async saveCanonicalizationReport() {},
       async getReview(id) { return id === "known" ? { reviewId: id, status: "pending" } : undefined; },
       async getProductById(id) { return id === "p1" ? { productId: "p1", brand: "Demo", name: "Product" } : undefined; },
+      async listCanonicalProducts() { return [{ productId: "p1", brand: "Demo", name: "Product" }]; },
       async listCatalogIndex() { return [{ productId: "p1", brand: "Demo", name: "Product", identifiers: {} }]; },
       async getProductHistory(id) {
         return id === "p1"
@@ -225,4 +226,32 @@ test("decision endpoint returns conservative Buy/Wait analysis", async () => {
   } finally {
     Date.now = realNow;
   }
+});
+
+
+test("arbitrage endpoint returns benchmark candidates without claiming validated resale", async () => {
+  const deps = dependencies();
+  const start = new Date("2026-01-01T00:00:00Z");
+  deps.catalog.getProductHistory = async () => {
+    const prices = [300,305,295,310,290,300,305,295,300,290,295,150];
+    return prices.map((price, index) => ({
+      observedAt: new Date(start.getTime() + index * 5 * 86400000).toISOString(),
+      price,
+      currency: "USD",
+      retailer: "Demo Store"
+    }));
+  };
+  const handler = createApiHandler({ ...deps, apiKey: "secret" });
+
+  await withServer(handler, async (base) => {
+    const response = await fetch(
+      `${base}/v1/arbitrage/opportunities?minimumNetRoi=0.25&feeRate=0.15`,
+      { headers: { authorization: "Bearer secret" } }
+    );
+    assert.equal(response.status, 200);
+    const body = await response.json();
+    assert.equal(body.validatedResaleMarket, false);
+    assert.equal(body.count, 1);
+    assert.equal(body.opportunities[0].benchmark.validatedResaleMarket, false);
+  });
 });
