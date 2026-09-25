@@ -448,3 +448,87 @@ $("#arbitrageButton").addEventListener("click", () => {
 });
 $("#runArbitrage").addEventListener("click", runArbitrageScan);
 $("#closeArbitrage").addEventListener("click", () => $("#arbitrageDialog").close());
+
+
+async function loadWatchlist() {
+  $("#watchlistList").innerHTML = "";
+  $("#watchlistStatus").textContent = "Loading watched products…";
+  try {
+    const response = await fetch("/v1/watchlist", { headers: headers() });
+    const body = await response.json();
+    if (!response.ok) throw new Error(body.error || "Unable to load watchlist");
+
+    const items = body.items ?? [];
+    $("#watchlistStatus").textContent = items.length
+      ? `${items.length} watched product${items.length === 1 ? "" : "s"}. The scheduled collector records new observations daily.`
+      : "No watched products yet.";
+
+    for (const item of items) {
+      const row = document.createElement("div");
+      row.className = "watchlist-item";
+
+      const info = document.createElement("div");
+      const title = document.createElement("strong");
+      title.textContent = item.query;
+      const meta = document.createElement("small");
+      meta.textContent = [item.location, item.enabled === false ? "Paused" : "Active"].filter(Boolean).join(" · ");
+      info.append(title, meta);
+
+      const remove = document.createElement("button");
+      remove.className = "ghost small";
+      remove.type = "button";
+      remove.textContent = "Remove";
+      remove.addEventListener("click", async () => {
+        const response = await fetch(`/v1/watchlist/${encodeURIComponent(item.watchId)}`, {
+          method: "DELETE",
+          headers: headers(),
+        });
+        const body = await response.json();
+        if (!response.ok) {
+          $("#watchlistStatus").textContent = body.error || "Unable to remove watch item";
+          return;
+        }
+        await loadWatchlist();
+      });
+
+      row.append(info, remove);
+      $("#watchlistList").append(row);
+    }
+  } catch (error) {
+    $("#watchlistStatus").textContent = error.message || String(error);
+  }
+}
+
+async function addWatchItem() {
+  const query = $("#watchQuery").value.trim();
+  const location = $("#watchLocation").value.trim();
+  if (!query) {
+    $("#watchlistStatus").textContent = "Enter a product query first.";
+    return;
+  }
+
+  try {
+    const response = await fetch("/v1/watchlist", {
+      method: "POST",
+      headers: headers(),
+      body: JSON.stringify({
+        query,
+        location: location || undefined,
+      }),
+    });
+    const body = await response.json();
+    if (!response.ok) throw new Error(body.error || "Unable to add watch item");
+    $("#watchQuery").value = "";
+    $("#watchLocation").value = "";
+    await loadWatchlist();
+  } catch (error) {
+    $("#watchlistStatus").textContent = error.message || String(error);
+  }
+}
+
+$("#watchlistButton").addEventListener("click", () => {
+  $("#watchlistDialog").showModal();
+  loadWatchlist();
+});
+$("#addWatchItem").addEventListener("click", addWatchItem);
+$("#closeWatchlist").addEventListener("click", () => $("#watchlistDialog").close());
