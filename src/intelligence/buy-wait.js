@@ -64,6 +64,13 @@ export function evaluateBuyWait(observations = [], options = {}) {
         latestPrice: latest?.price,
         currency: latest?.currency,
       },
+      model: {
+        name: "historical-relative-value-v1",
+        predictsFuturePrice: false,
+        minimumObservations,
+        minimumSpanDays,
+        maximumStalenessDays,
+      },
     };
   }
 
