@@ -1,4 +1,4 @@
-export const BUYWINDOW_VERSION = "0.13.0";
+export const BUYWINDOW_VERSION = "0.14.0";
 
 export const ENVIRONMENT_VARIABLES = [
   {
@@ -161,6 +161,11 @@ export function getReadiness(env = process.env) {
       productEnrichment: {
         ready: true,
         imageHashingEnabled: env.BUYWINDOW_IMAGE_HASHING === "true",
+      },
+      watchlistCollector: {
+        ready: searchReady,
+        scheduleProvided: true,
+        requiresSerpApiSecretInGitHubActions: true,
       },
       ebayMarketEvidence: {
         enabled: ebayCredentials.some(Boolean),
