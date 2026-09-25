@@ -10,6 +10,7 @@ import { GitHubIssueReviewQueue } from "../review/github-issues.js";
 import { GitHubCatalogStore } from "../storage/github.js";
 import { calculateLandedCost } from "../cost/landed-cost.js";
 import { createTaxProviders } from "../tax/provider-chain.js";
+import { summarizeHistory } from "../history/summarize.js";
 
 const WEB_ROOT = fileURLToPath(new URL("../../web/", import.meta.url));
 
@@ -256,6 +257,27 @@ export function createApiHandler({
           overrides: body.overrides ?? {},
         });
         return json(res, 200, resolved);
+      }
+
+      if (req.method === "GET" && url.pathname === "/v1/products") {
+        const products = await catalog.listCatalogIndex();
+        return json(res, 200, { products });
+      }
+
+      const historyMatch = url.pathname.match(/^\/v1\/products\/([^/]+)\/history$/);
+      if (historyMatch && req.method === "GET") {
+        const productId = decodeURIComponent(historyMatch[1]);
+        const product = await catalog.getProductById(productId);
+        if (!product) return json(res, 404, { error: "product not found" });
+
+        const requestedLimit = Number(url.searchParams.get("limit") || 500);
+        const limit = Math.max(1, Math.min(2000, requestedLimit));
+        const observations = await catalog.getProductHistory(productId, { limit });
+        return json(res, 200, {
+          product,
+          summary: summarizeHistory(observations ?? []),
+          observations: observations ?? [],
+        });
       }
 
       const productMatch = url.pathname.match(/^\/v1\/products\/([^/]+)$/);
