@@ -10,7 +10,7 @@ const missing = requiredForSearch.filter((key) => !process.env[key]);
 const result = {
   status: missing.length ? "degraded" : "ok",
   service: "buywindow",
-  version: "0.3.0",
+  version: "0.6.0",
   searchReady: missing.length === 0,
   missing,
 };

@@ -8,4 +8,6 @@ services:
       - .env
     environment:
       NODE_ENV: production
-    command: ["src/cli/health.js"]
+      PORT: 8080
+    ports:
+      - "8080:8080"

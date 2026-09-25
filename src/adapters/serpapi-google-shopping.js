@@ -51,6 +51,7 @@ export class SerpApiGoogleShoppingAdapter extends RetailerAdapter {
         oldPrice: typeof result.extracted_old_price === "number" ? result.extracted_old_price : undefined,
         currency: context.currency ?? "USD",
         delivery: result.delivery,
+        shippingAmount: /free\s+(shipping|delivery)/i.test(result.delivery ?? "") ? 0 : undefined,
         condition: result.second_hand_condition,
         promotion: result.tag,
       },

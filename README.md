@@ -108,3 +108,53 @@ docker compose run --rm buywindow src/cli/review.js resolve <review-id> reject
 ```
 
 A resolved review is moved to `reviews/resolved/`. Approved same-product, variant, and new-product decisions update the canonical catalog and add the observed offer to trusted price history when a price is available.
+
+
+## HTTP API
+
+BuyWindow now runs as an HTTP service by default in Docker:
+
+```bash
+docker compose up --build
+```
+
+Health check:
+
+```bash
+curl http://localhost:8080/health
+```
+
+Search:
+
+```bash
+curl -X POST http://localhost:8080/v1/search \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $BUYWINDOW_API_KEY" \
+  -d '{"query":"DEWALT DCD996B","location":"Austin, Texas"}'
+```
+
+See `docs/API.md` and `openapi.yaml` for the API contract.
+
+
+## Tax-aware landed cost
+
+BuyWindow can compare the cost that matters: the amount to actually acquire the item.
+
+```
+landed cost = listed price + known shipping/freight + tax
+```
+
+Tax is never silently guessed. Retailer-observed checkout tax wins when available; otherwise BuyWindow can use maintained jurisdiction rules or future pluggable tax providers. Oregon general tangible goods are currently supported as an official-rule fallback for the state's lack of a general sales/use transaction tax. Special product categories remain unresolved unless explicit tax evidence is available.
+
+Example request:
+
+```bash
+curl -X POST http://localhost:8080/v1/search \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $BUYWINDOW_API_KEY" \
+  -d '{
+    "query":"DEWALT DCD996B",
+    "destination":{"city":"Portland","state":"OR","postalCode":"97205","country":"US"},
+    "fulfillment":"shipping"
+  }'
+```
